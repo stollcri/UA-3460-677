@@ -7,7 +7,10 @@ default: all
 all: ocr test
 
 ocr:
-	${CC} ${CFLAGS} -o ./bin/ocr ./src/ocr.c
+	${CC} ${CFLAGS} -o ./bin/ocr-cpu ./src/ocr-cpu.c
 
 test:
-	./bin/ocr
+	./bin/ocr-cpu
+
+clean:
+	-rm ./bin/ocr-cpu
