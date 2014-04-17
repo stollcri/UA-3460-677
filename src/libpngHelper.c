@@ -1,50 +1,65 @@
-/*
- * A simple libpng example program
- * https://gist.github.com/niw/5963798
- * http://zarb.org/~gc/html/libpng.html
- *
- * Modified by Yoshimasa Niwa to make it much simpler
- * and support all defined color_type.
- *
- * To build, use the next instruction on OS X.
- * $ brew install libpng
- * $ clang -lz -lpng15 libpng_test.c
- *
- * Copyright 2002-2010 Guillaume Cottenceau.
- *
- * This software may be freely redistributed under the terms
- * of the X11 license.
- *
+/**
+ * 3460:677 Final Project: Paralelizing OCR using PCA
+ * Christopher Stoll, 2014
  */
+
+#ifndef LIBPNGHELPER_C
+#define LIBPNGHELPER_C
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <png.h>
 
-int width, height;
-png_byte color_type;
-png_byte bit_depth;
-png_bytep *row_pointers;
+#define PNG_BYTES_TO_CHECK 4
 
-void read_png_file(char *filename) {
-	FILE *fp = fopen(filename, "rb");
+/**
+ * Uses libpng to read in a PNG file
+ * @param  filename    The name of the PNG file to read in
+ * @param  imageWidth  Reference to an integer which will store the image's width
+ * @param  imageHeight Reference to an integer which will store the image's height
+ * @param  verbosity   Whether or not to print error messages to stderr
+ * @return             Returns an array of integers representing the image pixels
+ */
+int *readPNGFile(char *filename, int *imageWidth, int *imageHeight, int verbosity) {
+	FILE *pngfile = fopen(filename, "rb");
+	if(!pngfile) {
+		if(verbosity > 0) {
+			fprintf(stderr, "Error opening file: %s\n", filename);
+		}
+		return NULL;
+	}
+
+	char header[PNG_BYTES_TO_CHECK];
+	fread(header, 1, PNG_BYTES_TO_CHECK, pngfile);
+	int is_png = !png_sig_cmp((png_const_bytep)header, 0, PNG_BYTES_TO_CHECK);
+	if (!is_png) {
+		if(verbosity > 0) {
+			fprintf(stderr, "Invalid PNG file: %s\n", filename);
+		}
+		return NULL;
+	}
 
 	png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-	if(!png) abort();
+	if(!png) {
+		return NULL;
+	}
 
 	png_infop info = png_create_info_struct(png);
-	if(!info) abort();
+	if(!info) {
+		return NULL;
+	}
 
-	if(setjmp(png_jmpbuf(png))) abort();
+	if(setjmp(png_jmpbuf(png))) {
+		return NULL;
+	}
 
-	png_init_io(png, fp);
-
+	png_init_io(png, pngfile);
+	png_set_sig_bytes(png, PNG_BYTES_TO_CHECK);
 	png_read_info(png, info);
-
-	width      = png_get_image_width(png, info);
-	height     = png_get_image_height(png, info);
-	color_type = png_get_color_type(png, info);
-	bit_depth  = png_get_bit_depth(png, info);
+	int width = png_get_image_width(png, info);
+	int height = png_get_image_height(png, info);
+	png_byte color_type = png_get_color_type(png, info);
+	png_byte bit_depth = png_get_bit_depth(png, info);
 
 	// Read any color_type into 8bit depth, RGBA format.
 	// See http://www.libpng.org/pub/png/libpng-manual.txt
@@ -74,77 +89,61 @@ void read_png_file(char *filename) {
 
 	png_read_update_info(png, info);
 
+	png_bytep *row_pointers;
 	row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * height);
 	for(int y = 0; y < height; y++) {
 		row_pointers[y] = (png_byte*)malloc(png_get_rowbytes(png,info));
 	}
 
 	png_read_image(png, row_pointers);
+	fclose(pngfile);
 
-	fclose(fp);
+	int *imagePixels = (int*)malloc(sizeof(int) * height * width);
+
+	int n = 0;
+	int rPixel = 0;
+	int bPixel = 0;
+	int gPixel = 0;
+	int aPixel = 0;
+	for(int y = 0; y < height; ++y) {
+		png_bytep row = row_pointers[y];
+		for(int x = 0; x < width; ++x) {
+			png_bytep pixel = &(row[x * 4]);
+			rPixel = (int)pixel[0];
+			gPixel = (int)pixel[1];
+			bPixel = (int)pixel[2];
+			aPixel = (int)pixel[3];
+
+			n = (y * width) + x;
+			if ((rPixel == gPixel) && (gPixel == bPixel)) {
+				imagePixels[n] = rPixel;
+			} else {
+				if (rPixel > gPixel) {
+					if (rPixel > bPixel) {
+						imagePixels[n] = rPixel;
+					} else {
+						imagePixels[n] = bPixel;
+					}
+				} else {
+					if (gPixel > bPixel) {
+						imagePixels[n] = gPixel;
+					} else {
+						imagePixels[n] = bPixel;
+					}
+				}
+			}
+		}
+	}
+
+	// release png memory
+	for(int y = 0; y < height; y++) {
+		free(row_pointers[y]);
+	}
+	free(row_pointers);
+
+	*imageWidth = width;
+	*imageHeight = height;
+	return imagePixels;
 }
 
-// void write_png_file(char *filename) {
-// 	int y;
-
-// 	FILE *fp = fopen(filename, "wb");
-// 	if(!fp) abort();
-
-// 	png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-// 	if (!png) abort();
-
-// 	png_infop info = png_create_info_struct(png);
-// 	if (!info) abort();
-
-// 	if (setjmp(png_jmpbuf(png))) abort();
-
-// 	png_init_io(png, fp);
-
-// 	// Output is 8bit depth, RGBA format.
-// 	png_set_IHDR(
-// 		png,
-// 		info,
-// 		width, height,
-// 		8,
-// 		PNG_COLOR_TYPE_RGBA,
-// 		PNG_INTERLACE_NONE,
-// 		PNG_COMPRESSION_TYPE_DEFAULT,
-// 		PNG_FILTER_TYPE_DEFAULT
-// 	);
-// 	png_write_info(png, info);
-
-// 	// To remove the alpha channel for PNG_COLOR_TYPE_RGB format,
-// 	// Use png_set_filler().
-// 	//png_set_filler(png, 0, PNG_FILLER_AFTER);
-
-// 	png_write_image(png, row_pointers);
-// 	png_write_end(png, NULL);
-
-// 	for(int y = 0; y < height; y++) {
-// 		free(row_pointers[y]);
-// 	}
-// 	free(row_pointers);
-
-// 	fclose(fp);
-// }
-
-// void process_png_file() {
-// 	for(int y = 0; y < height; y++) {
-// 		png_bytep row = row_pointers[y];
-// 		for(int x = 0; x < width; x++) {
-// 			png_bytep px = &(row[x * 4]);
-// 			// Do something awesome for each pixel here...
-// 			//printf("%4d, %4d = RGBA(%3d, %3d, %3d, %3d)\n", x, y, px[0], px[1], px[2], px[3]);
-// 		}
-// 	}
-// }
-
-// int main(int argc, char *argv[]) {
-// 	if(argc != 3) abort();
-
-// 	read_png_file(argv[1]);
-// 	process_png_file();
-// 	write_png_file(argv[2]);
-
-// 	return 0;
-// }
+#endif
