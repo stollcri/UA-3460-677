@@ -9,4 +9,5 @@
 int main(int argc, char const *argv[])
 {
 	loadKnowledge("./dat/eigenspace", "./dat/characters");
+	loadDocument("./tst/RightsOfManB.png");
 }
