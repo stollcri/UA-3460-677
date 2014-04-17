@@ -4,8 +4,9 @@
  */
 
 #include "loadKnowledge.c"
+#include "loadDocument.c"
 
 int main(int argc, char const *argv[])
 {
-	loadKnowledge();
+	loadKnowledge("./dat/eigenspace", "./dat/characters");
 }
