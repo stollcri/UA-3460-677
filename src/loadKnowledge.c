@@ -30,8 +30,10 @@ void readEigenspaceFromFile(char *filename)
 		}
 
 		// read means (doubles)
+		double currentMean = 0;
 		for (int i = 0; i < klimit; ++i) {
-			/* code */
+			fread(&currentMean, sizeof(double), 1, inFile);
+			// we are not using them, discard
 		}
 
 		// read eigenvalues (doubles)
