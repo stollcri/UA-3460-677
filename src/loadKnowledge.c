@@ -8,6 +8,18 @@
 
 #include <stdio.h>
 
+struct eigenimagespace {
+	int sampleCount;
+	int dimensionCount;
+	double *eigenspace;
+	double *eigenvalues;
+};
+
+struct charactersspace {
+	char *characters;
+	double *weights;
+};
+
 void readEigenspaceFromFile(char *filename)
 {
 	int klimit = 0;
