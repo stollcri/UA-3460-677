@@ -72,10 +72,10 @@ void readCharactersFromFile(char *filename)
 	fclose(inFile);
 }
 
-void loadKnowledge()
+void loadKnowledge(char *eigenspaceFile, char *charactersFile)
 {
-	readEigenspaceFromFile("./dat/eigenspace");
-	readCharactersFromFile("./dat/characters");
+	readEigenspaceFromFile(eigenspaceFile);
+	readCharactersFromFile(charactersFile);
 }
 
 #endif
