@@ -28,4 +28,3 @@ libpng:
 	# sudo ln -s libpng16.16.dylib libpng16.dylib
 	# /usr/local/bin/libpng-config --cflags --ldflags # use results as CFLAGS
 	:
-	
