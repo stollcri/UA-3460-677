@@ -146,4 +146,63 @@ int *readPNGFile(char *filename, int *imageWidth, int *imageHeight, int verbosit
 	return imagePixels;
 }
 
+void write_png_file(int *imageVector, int width, int height, char *filename) {
+	int y;
+
+	FILE *fp = fopen(filename, "wb");
+	if(!fp) abort();
+
+	png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+	if (!png) abort();
+
+	png_infop info = png_create_info_struct(png);
+	if (!info) abort();
+
+	if (setjmp(png_jmpbuf(png))) abort();
+
+	png_init_io(png, fp);
+
+	// Output is 8bit depth, RGBA format.
+	png_set_IHDR(
+		png,
+		info,
+		width, height,
+		8,
+		PNG_COLOR_TYPE_RGBA,
+		PNG_INTERLACE_NONE,
+		PNG_COMPRESSION_TYPE_DEFAULT,
+		PNG_FILTER_TYPE_DEFAULT
+	);
+	png_write_info(png, info);
+
+	png_bytep *row_pointers;
+	row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * height);
+	for(int y = 0; y < height; y++) {
+		row_pointers[y] = (png_byte*)malloc(png_get_rowbytes(png,info));
+	}
+
+	int i = 0;
+	for(int y = 0; y < height; y++) {
+		png_bytep row = row_pointers[y];
+
+		for(int z = 0; z < width; z++) {
+			row_pointers[y][z*4+0] = (png_byte)imageVector[i];
+			row_pointers[y][z*4+1] = (png_byte)imageVector[i];
+			row_pointers[y][z*4+2] = (png_byte)imageVector[i];
+			row_pointers[y][z*4+3] = 255;
+			++i;
+		}
+	}
+
+	png_write_image(png, row_pointers);
+	png_write_end(png, NULL);
+
+	for(int y = 0; y < height; y++) {
+		free(row_pointers[y]);
+	}
+	free(row_pointers);
+
+	fclose(fp);
+}
+
 #endif
