@@ -8,12 +8,15 @@
 
 #include <stdbool.h>
 #include <math.h>
+#include <string.h>
 #include "libpngHelper.c"
 #include "imageDocument.c"
 
 #define LOADDOCUMENT_VERBOSE 1
-#define SPLIT_THRESHHOLD 64
+#define SPLIT_THRESHHOLD 128
 #define MAX_IMAGE_DEPTH 255
+
+#define DEBUG_SAVE_INDIVIDUAL_CHARACTERS 0
 
 struct imageDocumentLine *findCharacters(int *imageVector, int imageWidth, int rowBegin, int rowEnd, int *spacing)
 {
@@ -25,8 +28,7 @@ struct imageDocumentLine *findCharacters(int *imageVector, int imageWidth, int r
 		charSpacing = 2 + (int)round(imageWidth * .005);
 		*spacing = charSpacing;
 	}
-	int spaceWidth = charSpacing * 4;
-	int maxSpaceWidth = spaceWidth * 2;
+	int maxCharSpacing = (charSpacing * 2) + 2;
 
 	int currentPixel = 0;
 	bool blankCol = true;
@@ -46,12 +48,13 @@ struct imageDocumentLine *findCharacters(int *imageVector, int imageWidth, int r
 
 		if (!blankCol) {
 			// WARN: Deviation from Python original
-			if (spaceCols > maxSpaceWidth) {
-				printf(" SKIP  (%d, %d), (%d, %d)\n", j-spaceCols, rowBegin, j, rowEnd);
+			//printf("%d, %d, %d\n", spaceCols, charSpacing, maxCharSpacing);
+			if (spaceCols > maxCharSpacing) {
+				printf(" SKIP  %d/%d (%d, %d), (%d, %d)\n", spaceCols, maxCharSpacing, j-spaceCols, rowBegin, j, rowEnd);
 				//newchar = newImageDocumentChar();
 				//addCharToLine();
-			} else if (spaceCols > spaceWidth) {
-				printf(" SKIP  (%d, %d), (%d, %d)\n", j-spaceCols, rowBegin, j, rowEnd);
+			} else if (spaceCols > charSpacing) {
+				printf(" SPACE %d/%d (%d, %d), (%d, %d)\n", spaceCols, charSpacing, j-spaceCols, rowBegin, j, rowEnd);
 			}
 
 			pixelColsEnd = j;
@@ -60,12 +63,33 @@ struct imageDocumentLine *findCharacters(int *imageVector, int imageWidth, int r
 			++pixelCols;
 		} else {
 			if (pixelCols > 2) {
-				charSpacing = (int)round((spaceWidth + (pixelCols / 3)) / 2) + 1;
+				charSpacing = (int)round((charSpacing + (pixelCols / 3)) / 2) + 1;
 				*spacing = charSpacing;
 			}
 			++spaceCols;
 			if (pixelColsEnd) {
 				printf(" CHAR  (%d, %d), (%d, %d)\n", pixelColsEnd-pixelCols, rowBegin, pixelColsEnd, rowEnd);
+				
+				if (DEBUG_SAVE_INDIVIDUAL_CHARACTERS) {
+					int wdth = pixelColsEnd - (pixelColsEnd-pixelCols) + 2;
+					int high = rowEnd - rowBegin + 3;
+
+					char fName[100] = "./tst/tst-";
+					char buffer[16];
+					snprintf(buffer, sizeof(buffer), "%d-%d-%d.png", rowBegin, (pixelColsEnd-pixelCols), pixelColsEnd);
+					strcat(fName, buffer);
+					// printf(" %d,%d = %s\n", wdth, high, fName);
+					int k = 0;
+					int *charImageVector = (int*)malloc(wdth * high * sizeof(int));
+					for (int i = rowBegin-1; i < rowEnd+2; ++i) {
+						for (int j = (pixelColsEnd-pixelCols); j < pixelColsEnd+2; ++j) {
+							currentPixel = (i * imageWidth) + j;
+							charImageVector[k] = imageVector[currentPixel];
+							++k;
+						}
+					}
+					write_png_file(charImageVector, wdth, high, fName);
+				}
 			}
 			pixelCols = 0;
 			pixelColsEnd = 0;
