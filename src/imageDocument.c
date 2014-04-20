@@ -72,17 +72,23 @@ struct imageDocumentChar *newImageDocumentCharBlank()
 
 void freeImageDocument(struct imageDocument *targetDocument)
 {
-	// TODO: free the memory
+	if (targetDocument) {
+		// TODO: free the memory
+	}
 }
 
 void freeImageDocumentLine(struct imageDocumentLine *targetLine)
 {
-	// TODO: free the memory
+	if (targetLine) {
+		// TODO: free the memory
+	}
 }
 
 void freeImageDocumentChar(struct imageDocumentChar *targetChar)
 {
-	// TODO: free the memory
+	if (targetChar) {
+		// TODO: free the memory
+	}
 }
 
 
@@ -91,7 +97,8 @@ void addLineToDocument(struct imageDocument *targetDocument, struct imageDocumen
 	if (targetDocument && sourceLine) {
 		if (targetDocument->lines) {
 			struct imageDocumentLine *currentLine = targetDocument->lines;
-			struct imageDocumentLine *nextLine = newImageDocumentLine();
+			struct imageDocumentLine *nextLine;
+			
 			while (currentLine->nextLine) {
 				nextLine = currentLine->nextLine;
 				currentLine = nextLine;
@@ -111,7 +118,7 @@ void addCharToLine(struct imageDocumentLine *targetLine, struct imageDocumentCha
 	if (targetLine && sourceChar) {
 		if (targetLine->characters) {
 			struct imageDocumentChar *currentChar = targetLine->characters;
-			struct imageDocumentChar *nextChar = newImageDocumentCharBlank();
+			struct imageDocumentChar *nextChar;
 
 			while (currentChar->nextChar) {
 				nextChar = currentChar->nextChar;

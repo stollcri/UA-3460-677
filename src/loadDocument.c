@@ -47,14 +47,12 @@ struct imageDocumentLine *findCharacters(int *imageVector, int imageWidth, int r
 		}
 
 		if (!blankCol) {
-			// WARN: Deviation from Python original
-			//printf("%d, %d, %d\n", spaceCols, charSpacing, maxCharSpacing);
 			if (spaceCols > maxCharSpacing) {
-				printf(" SKIP  %d/%d (%d, %d), (%d, %d)\n", spaceCols, maxCharSpacing, j-spaceCols, rowBegin, j, rowEnd);
-				//newchar = newImageDocumentChar();
-				//addCharToLine();
+				//printf(" SKIP  %d/%d (%d, %d), (%d, %d)\n", spaceCols, maxCharSpacing, j-spaceCols, rowBegin, j, rowEnd);
 			} else if (spaceCols > charSpacing) {
-				printf(" SPACE %d/%d (%d, %d), (%d, %d)\n", spaceCols, charSpacing, j-spaceCols, rowBegin, j, rowEnd);
+				//printf(" SPACE %d/%d (%d, %d), (%d, %d)\n", spaceCols, charSpacing, j-spaceCols, rowBegin, j, rowEnd);
+				newchar = newImageDocumentChar(0, 0, 0, 0, ' ');
+				addCharToLine(currentLine, newchar);
 			}
 
 			pixelColsEnd = j;
@@ -68,7 +66,10 @@ struct imageDocumentLine *findCharacters(int *imageVector, int imageWidth, int r
 			}
 			++spaceCols;
 			if (pixelColsEnd) {
-				printf(" CHAR  (%d, %d), (%d, %d)\n", pixelColsEnd-pixelCols, rowBegin, pixelColsEnd, rowEnd);
+				// printf(" CHAR  (%d, %d) %d, (%d, %d) %d\n", pixelColsEnd-pixelCols, rowBegin, (pixelColsEnd - (pixelColsEnd-pixelCols) + 2), pixelColsEnd, rowEnd, (rowEnd - rowBegin + 3));
+
+				newchar = newImageDocumentChar((pixelColsEnd-pixelCols), rowBegin-1, pixelColsEnd+2, rowEnd+2, '?');
+				addCharToLine(currentLine, newchar);
 				
 				if (DEBUG_SAVE_INDIVIDUAL_CHARACTERS) {
 					int wdth = pixelColsEnd - (pixelColsEnd-pixelCols) + 2;
@@ -95,40 +96,10 @@ struct imageDocumentLine *findCharacters(int *imageVector, int imageWidth, int r
 			pixelColsEnd = 0;
 		}
 	}
-
 	return currentLine;
-	// 	for row in xrange(0, row_count):
-	// 		if text_row[row][col] > threshhold:
-	// 			blank_col = False
-	// 		pixel_col.append(text_row[row][col])
-
-	// 	if not blank_col:
-	// 		if space_cols > 8:
-	// 			characters.append([''])
-	// 		elif space_cols > space_width:
-	// 			characters.append([' '])
-
-	// 		text_cols.append(pixel_col)
-	// 		blank_col = True
-	// 		space_cols = 0
-	// 		pixel_cols += 1
-			
-	// 	else:
-	// 		if pixel_cols > 2:
-	// 			space_width = int(round((space_width + (pixel_cols / 3)) / 2)) + 1
-	// 			# print pixel_cols, space_width
-	// 		space_cols += 1
-	// 		pixel_cols = 0
-	// 		if len(text_cols):
-	// 			filename = "./out/img_" + str(row_index) + "-" + str(col) + ".png"
-	// 			results = size_character(transpose_image(text_cols), filename)
-	// 			characters.append(results)
-	// 			text_cols = []
-
-	// return characters, space_width
 }
 
-void findRows(int *imageVector, int imageWidth, int imageHeight, int imageDepth)
+struct imageDocument *findRows(int *imageVector, int imageWidth, int imageHeight, int imageDepth)
 {
 	int pixelIverse = 0;
 	int currentPixel = 0;
@@ -138,8 +109,9 @@ void findRows(int *imageVector, int imageWidth, int imageHeight, int imageDepth)
 	int pixelRowEnd = 0;
 
 	int letterSpacing = 0;
-	struct imageDocument *imageDoc = newImageDocument();
+	struct imageDocument *currentImageDoc = newImageDocument();
 	struct imageDocumentLine *newline;
+	struct imageDocumentChar *newchar;
 
 	for (int i = 0; i < imageHeight; ++i) {
 		for (int j = 0; j < imageWidth; ++j) {
@@ -165,22 +137,93 @@ void findRows(int *imageVector, int imageWidth, int imageHeight, int imageDepth)
 			blankRow = true;
 		} else {
 			if (pixelRowEnd - pixelRowBegin) {
-				printf("%d - %d\n", pixelRowBegin, pixelRowEnd);
-
 				newline = findCharacters(imageVector, imageWidth, pixelRowBegin, pixelRowEnd, &letterSpacing);
-				addLineToDocument(imageDoc, newline);
-				//
-				// results, spacing = split_characters(text_rows, threshhold, row_index, spacing)
-				// for result in results:
-				// 	characters.append(result)
-				// characters.append('\n')
-				// text_rows = []
-				// return characters
+				newchar = newImageDocumentChar(0, 0, 0, 0, '\n');
+				addCharToLine(newline, newchar);
+				addLineToDocument(currentImageDoc, newline);
 			}
 			pixelRowBegin = 0;
 			pixelRowEnd = 0;
 		}
 	}
+	return currentImageDoc;
+}
+
+void scaleImageMatrix(int *imageVector, struct imageDocumentChar *imageDocChar)
+{
+	int width = imageDocChar->x2 - imageDocChar->x1;
+	int height = imageDocChar->y2 - imageDocChar->y1;
+	int newWidth = width;
+	int newHeight = height;
+
+	if (height != width) {
+		if (height > width) {
+			int padding = height - width;
+			int paddingQ = (int)(padding / 2);
+			int paddingR = padding - (paddingQ * 2);
+			newWidth = paddingQ + width + paddingQ + paddingR;
+		} else {
+			int padding = width - height;
+			int paddingQ = (int)(padding / 2);
+			int paddingR = padding - (paddingQ * 2);
+			newHeight = paddingQ + width + paddingQ + paddingR;
+		}
+	}
+}
+
+void ocrCharacter(int *imageVector, struct imageDocumentChar *imageDocChar)
+{
+	if (imageDocChar) {
+		printf("%c", imageDocChar->value);
+		scaleImageMatrix(imageVector, imageDocChar);
+	}
+}
+
+void ocrCharLoop(int *imageVector, struct imageDocumentLine *imageDocLine)
+{
+	if (imageDocLine) {
+		if (imageDocLine->characters) {
+			struct imageDocumentChar *currentChar = imageDocLine->characters;
+			struct imageDocumentChar *nextChar;
+
+			ocrCharacter(imageVector, currentChar);
+
+			while (currentChar->nextChar) {
+				nextChar = currentChar->nextChar;
+				currentChar = nextChar;
+
+				ocrCharacter(imageVector, currentChar);
+			}
+
+			freeImageDocumentChar(nextChar);
+		}
+	}
+}
+
+void ocrLineLoop(int *imageVector, struct imageDocument *imageDoc)
+{
+	if (imageDoc) {
+		if (imageDoc->lines) {
+			struct imageDocumentLine *currentLine = imageDoc->lines;
+			struct imageDocumentLine *nextLine;
+
+			ocrCharLoop(imageVector, currentLine);
+
+			while (currentLine->nextLine) {
+				nextLine = currentLine->nextLine;
+				currentLine = nextLine;
+
+				ocrCharLoop(imageVector, currentLine);
+			}
+
+			freeImageDocumentLine(nextLine);
+		}
+	}
+}
+
+void startOcr(int *imageVector, struct imageDocument *imageDoc)
+{
+	ocrLineLoop(imageVector, imageDoc);
 }
 
 void loadDocument(char *filename)
@@ -190,7 +233,9 @@ void loadDocument(char *filename)
 	int imageHeight = 0;
 	imageVector = readPNGFile(filename, &imageWidth, &imageHeight, LOADDOCUMENT_VERBOSE);
 	if (imageVector && imageWidth && imageHeight) {
-		findRows(imageVector, imageWidth, imageHeight, MAX_IMAGE_DEPTH);
+		struct imageDocument *imageDoc;
+		imageDoc = findRows(imageVector, imageWidth, imageHeight, MAX_IMAGE_DEPTH);
+		startOcr(imageVector, imageDoc);
 	}
 }
 
