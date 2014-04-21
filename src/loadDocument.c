@@ -75,7 +75,7 @@ struct imageDocumentLine *findCharacters(int *imageVector, int imageWidth, int r
 					int wdth = pixelColsEnd - (pixelColsEnd-pixelCols) + 2;
 					int high = rowEnd - rowBegin + 3;
 
-					char fName[100] = "./tst/tst-";
+					char fName[100] = "./tst/tst-0-";
 					char buffer[16];
 					snprintf(buffer, sizeof(buffer), "%d-%d-%d.png", rowBegin, (pixelColsEnd-pixelCols), pixelColsEnd);
 					strcat(fName, buffer);
@@ -149,50 +149,116 @@ struct imageDocument *findRows(int *imageVector, int imageWidth, int imageHeight
 	return currentImageDoc;
 }
 
-void scaleImageMatrix(int *imageVector, struct imageDocumentChar *imageDocChar)
+int scaleImageMatrix(int *imageVector, int imageWidth, struct imageDocumentChar *imageDocChar, int **charImage)
 {
 	int width = imageDocChar->x2 - imageDocChar->x1;
 	int height = imageDocChar->y2 - imageDocChar->y1;
+
+	printf("%d, %d\n", width, height);
+	if ((width == 0) || height == 0) {
+		return 0;
+	}
+
+	int padding = 0;
+	int paddingQ = 0;
+	int paddingR = 0;
 	int newWidth = width;
 	int newHeight = height;
 
+	int padLeft = 0;
+	int padRight = newWidth;
+	int padTop = 0;
+	int padBottom = newHeight;
+
 	if (height != width) {
 		if (height > width) {
-			int padding = height - width;
-			int paddingQ = (int)(padding / 2);
-			int paddingR = padding - (paddingQ * 2);
+			padding = height - width;
+			paddingQ = (int)round((padding / 2));
+			paddingR = padding - (paddingQ * 2);
 			newWidth = paddingQ + width + paddingQ + paddingR;
+
+			padLeft = paddingQ;
+			padRight = paddingQ + width - 1;
 		} else {
-			int padding = width - height;
-			int paddingQ = (int)(padding / 2);
-			int paddingR = padding - (paddingQ * 2);
+			padding = width - height;
+			paddingQ = (int)round((padding / 2));
+			paddingR = padding - (paddingQ * 2);
 			newHeight = paddingQ + width + paddingQ + paddingR;
+
+			padTop = paddingQ;
+			padBottom = paddingQ + width - 1;
+		}
+	}
+	printf(" %d, %d, %d, %d\n", width, height, newWidth, newHeight);
+	printf(" >> %d, %d, %d, %d\n", padding, paddingQ, padLeft, padTop);
+
+	int *tempImage = (int*)malloc(newWidth * newHeight * sizeof(int));
+	memset(tempImage, 0, (newWidth * newHeight * sizeof(int)));
+
+	int k = 0;
+	int imagePixel = 0;
+	int currentPixel = 0;
+	for (int i = 0; i < newHeight; ++i) {
+		if ((i >= padTop) && i <= padBottom) {
+			k = 0;
+			for (int j = 0; j < newWidth; ++j) {
+				if ((j >= padLeft) && (j <= padRight)) {
+					imagePixel = ((imageDocChar->y1 + i) * imageWidth) + (imageDocChar->x1 + k);
+					currentPixel = (i * newWidth) + j;
+					++k;
+					
+					//printf(" >> imageVector[%d] = %d\n", imagePixel, imageVector[imagePixel]);
+					tempImage[currentPixel] = imageVector[imagePixel];
+					//printf(" %d,%d >> tempImage[%d] = %d\n", i, j, currentPixel, tempImage[currentPixel]);
+				}
+
+				else {
+					currentPixel = (i * newWidth) + j;
+					tempImage[currentPixel] = 128;
+				}
+			}
+		}
+	}
+
+					char fName[100] = "./tst/tst-1-";
+					char buffer[16];
+					snprintf(buffer, sizeof(buffer), "%d-%d.png", imageDocChar->y1, imageDocChar->x1);
+					strcat(fName, buffer);
+					//printf(" %d,%d = %s\n", newWidth, newHeight, fName);
+					write_png_file(tempImage, newWidth, newHeight, fName);
+
+
+	*charImage = tempImage;
+	return 1;
+}
+
+void ocrCharacter(int *imageVector, int imageWidth, struct imageDocumentChar *imageDocChar)
+{
+	if (imageDocChar) {
+		printf("%c", imageDocChar->value);
+		int *charImage;
+		int scaleOk = scaleImageMatrix(imageVector, imageWidth, imageDocChar, &charImage);
+
+		if (scaleOk) {
+			free(charImage);
 		}
 	}
 }
 
-void ocrCharacter(int *imageVector, struct imageDocumentChar *imageDocChar)
-{
-	if (imageDocChar) {
-		printf("%c", imageDocChar->value);
-		scaleImageMatrix(imageVector, imageDocChar);
-	}
-}
-
-void ocrCharLoop(int *imageVector, struct imageDocumentLine *imageDocLine)
+void ocrCharLoop(int *imageVector, int imageWidth, struct imageDocumentLine *imageDocLine)
 {
 	if (imageDocLine) {
 		if (imageDocLine->characters) {
 			struct imageDocumentChar *currentChar = imageDocLine->characters;
 			struct imageDocumentChar *nextChar;
 
-			ocrCharacter(imageVector, currentChar);
+			ocrCharacter(imageVector, imageWidth, currentChar);
 
 			while (currentChar->nextChar) {
 				nextChar = currentChar->nextChar;
 				currentChar = nextChar;
 
-				ocrCharacter(imageVector, currentChar);
+				ocrCharacter(imageVector, imageWidth, currentChar);
 			}
 
 			freeImageDocumentChar(nextChar);
@@ -200,20 +266,20 @@ void ocrCharLoop(int *imageVector, struct imageDocumentLine *imageDocLine)
 	}
 }
 
-void ocrLineLoop(int *imageVector, struct imageDocument *imageDoc)
+void ocrLineLoop(int *imageVector, int imageWidth, struct imageDocument *imageDoc)
 {
 	if (imageDoc) {
 		if (imageDoc->lines) {
 			struct imageDocumentLine *currentLine = imageDoc->lines;
 			struct imageDocumentLine *nextLine;
 
-			ocrCharLoop(imageVector, currentLine);
+			ocrCharLoop(imageVector, imageWidth, currentLine);
 
 			while (currentLine->nextLine) {
 				nextLine = currentLine->nextLine;
 				currentLine = nextLine;
 
-				ocrCharLoop(imageVector, currentLine);
+				ocrCharLoop(imageVector, imageWidth, currentLine);
 			}
 
 			freeImageDocumentLine(nextLine);
@@ -221,9 +287,9 @@ void ocrLineLoop(int *imageVector, struct imageDocument *imageDoc)
 	}
 }
 
-void startOcr(int *imageVector, struct imageDocument *imageDoc)
+void startOcr(int *imageVector, int imageWidth, struct imageDocument *imageDoc)
 {
-	ocrLineLoop(imageVector, imageDoc);
+	ocrLineLoop(imageVector, imageWidth, imageDoc);
 }
 
 void loadDocument(char *filename)
@@ -235,7 +301,7 @@ void loadDocument(char *filename)
 	if (imageVector && imageWidth && imageHeight) {
 		struct imageDocument *imageDoc;
 		imageDoc = findRows(imageVector, imageWidth, imageHeight, MAX_IMAGE_DEPTH);
-		startOcr(imageVector, imageDoc);
+		startOcr(imageVector, imageWidth, imageDoc);
 	}
 }
 
