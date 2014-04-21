@@ -11,18 +11,21 @@
 #include <string.h>
 #include "libpngHelper.c"
 #include "imageDocument.c"
+#include "resizeImage.c"
 
 #define LOADDOCUMENT_VERBOSE 1
 #define SPLIT_THRESHHOLD 128
 #define MAX_IMAGE_DEPTH 255
 
 #define DEBUG_SAVE_INDIVIDUAL_CHARACTERS 0
+#define DEBUG_SAVE_STANDARDIZED_CHARACTERS 0
 
 struct imageDocumentLine *findCharacters(int *imageVector, int imageWidth, int rowBegin, int rowEnd, int *spacing)
 {
 	struct imageDocumentLine *currentLine = newImageDocumentLine();
 	struct imageDocumentChar *newchar;
 	
+	// set a space width estimate
 	int charSpacing = *spacing;
 	if (!charSpacing) {
 		charSpacing = 2 + (int)round(imageWidth * .005);
@@ -37,20 +40,29 @@ struct imageDocumentLine *findCharacters(int *imageVector, int imageWidth, int r
 	int pixelColsBegin = 0;
 	int pixelColsEnd = 0;
 
+	int finalX1 = 0;
+	int finalY1 = 0;
+	int finalX2 = 0;
+	int finalY2 = 0;
+
+	// examine each column to find places to split
 	for (int j = 0; j < imageWidth; ++j) {
+		// check if the column is empty
 		for (int i = rowBegin; i < rowEnd; ++i) {
 			currentPixel = (i * imageWidth) + j;
 			if (imageVector[currentPixel] > SPLIT_THRESHHOLD) {
-				//printf(" %d, %d\n", currentPixel, imageVector[currentPixel]);
 				blankCol = false;
 			}
 		}
 
+		// Process columns which contain data
 		if (!blankCol) {
+			// blank area larger than a single space
 			if (spaceCols > maxCharSpacing) {
-				//printf(" SKIP  %d/%d (%d, %d), (%d, %d)\n", spaceCols, maxCharSpacing, j-spaceCols, rowBegin, j, rowEnd);
+				//
+
+			// blanks area about the size of a space
 			} else if (spaceCols > charSpacing) {
-				//printf(" SPACE %d/%d (%d, %d), (%d, %d)\n", spaceCols, charSpacing, j-spaceCols, rowBegin, j, rowEnd);
 				newchar = newImageDocumentChar(0, 0, 0, 0, ' ');
 				addCharToLine(currentLine, newchar);
 			}
@@ -59,31 +71,83 @@ struct imageDocumentLine *findCharacters(int *imageVector, int imageWidth, int r
 			blankCol = true;
 			spaceCols = 0;
 			++pixelCols;
+
+		// Process past data columns
+		// TODO: FIX: a data column on the right hand side will be ignored
 		} else {
+			// update our space width estimation
 			if (pixelCols > 2) {
 				charSpacing = (int)round((charSpacing + (pixelCols / 3)) / 2) + 1;
 				*spacing = charSpacing;
 			}
 			++spaceCols;
-			if (pixelColsEnd) {
-				// printf(" CHAR  (%d, %d) %d, (%d, %d) %d\n", pixelColsEnd-pixelCols, rowBegin, (pixelColsEnd - (pixelColsEnd-pixelCols) + 2), pixelColsEnd, rowEnd, (rowEnd - rowBegin + 3));
 
-				newchar = newImageDocumentChar((pixelColsEnd-pixelCols), rowBegin-1, pixelColsEnd+2, rowEnd+2, '?');
+			// data to process
+			if (pixelColsEnd) {
+				// calculate character bounds within the image
+				finalX1 = (pixelColsEnd-pixelCols);
+				finalY1 = rowBegin-1;
+				finalX2 = pixelColsEnd+2;
+				finalY2 = rowEnd+2;
+
+				// remove blank space from the top
+				int padTop = 0;
+				bool charLine = false;
+				for (int k = finalY1; k < finalY2; ++k) {
+					for (int l = finalX1; l < finalX2; ++l) {
+						currentPixel = (k * imageWidth) + l;
+						if (imageVector[currentPixel] > SPLIT_THRESHHOLD) {
+							charLine = true;
+							break;
+						}
+					}
+					if (charLine && !padTop) {
+						padTop = (k - 1) - finalY1;
+						break;
+					}
+				}
+				if (padTop > 1) {
+					finalY1 += padTop;
+				}
+				
+				// remove blank space from the bottom
+				int padBottom = 0;
+				charLine = false;
+				for (int k = (finalY2 - 1); k > finalY1; --k) {
+					for (int l = finalX1; l < finalX2; ++l) {
+						currentPixel = (k * imageWidth) + l;
+						if (imageVector[currentPixel] > SPLIT_THRESHHOLD) {
+							charLine = true;
+							break;
+						}
+					}
+					if (charLine && !padBottom) {
+						padBottom = finalY2 - (k + 2);
+						break;
+					}
+				}
+				if (padBottom > 1) {
+					finalY2 -= padBottom;
+				}
+
+				// store the newly found character
+				newchar = newImageDocumentChar(finalX1, finalY1, finalX2, finalY2, '?');
 				addCharToLine(currentLine, newchar);
 				
+				// to visually see what is being stored
 				if (DEBUG_SAVE_INDIVIDUAL_CHARACTERS) {
-					int wdth = pixelColsEnd - (pixelColsEnd-pixelCols) + 2;
-					int high = rowEnd - rowBegin + 3;
+					int wdth = finalX2 - finalX1;
+					int high = finalY2 - finalY1;
 
-					char fName[100] = "./tst/tst-0-";
+					char fName[100] = "./tst/tst_0-";
 					char buffer[16];
-					snprintf(buffer, sizeof(buffer), "%d-%d-%d.png", rowBegin, (pixelColsEnd-pixelCols), pixelColsEnd);
+					snprintf(buffer, sizeof(buffer), "%d-%d-%d.png", rowBegin, finalX1, finalX2);
 					strcat(fName, buffer);
 					// printf(" %d,%d = %s\n", wdth, high, fName);
 					int k = 0;
 					int *charImageVector = (int*)malloc(wdth * high * sizeof(int));
-					for (int i = rowBegin-1; i < rowEnd+2; ++i) {
-						for (int j = (pixelColsEnd-pixelCols); j < pixelColsEnd+2; ++j) {
+					for (int i = finalY1; i < finalY2; ++i) {
+						for (int j = finalX1; j < finalX2; ++j) {
 							currentPixel = (i * imageWidth) + j;
 							charImageVector[k] = imageVector[currentPixel];
 							++k;
@@ -92,6 +156,7 @@ struct imageDocumentLine *findCharacters(int *imageVector, int imageWidth, int r
 					write_png_file(charImageVector, wdth, high, fName);
 				}
 			}
+
 			pixelCols = 0;
 			pixelColsEnd = 0;
 		}
@@ -113,7 +178,9 @@ struct imageDocument *findRows(int *imageVector, int imageWidth, int imageHeight
 	struct imageDocumentLine *newline;
 	struct imageDocumentChar *newchar;
 
+	// examine each row to find places to split
 	for (int i = 0; i < imageHeight; ++i) {
+		// check if a row is empty
 		for (int j = 0; j < imageWidth; ++j) {
 			currentPixel = (i * imageWidth) + j;
 			pixelIverse = imageDepth - imageVector[currentPixel];
@@ -129,12 +196,16 @@ struct imageDocument *findRows(int *imageVector, int imageWidth, int imageHeight
 			}
 		}
 
+		// Process rows which contain data
 		if (!blankRow) {
 			if (!pixelRowBegin) {
 				pixelRowBegin = i;
 			}
 			pixelRowEnd = i;
 			blankRow = true;
+
+		// Process past data rows
+		// TODO: FIX: a data row on the bottom will be ignored
 		} else {
 			if (pixelRowEnd - pixelRowBegin) {
 				newline = findCharacters(imageVector, imageWidth, pixelRowBegin, pixelRowEnd, &letterSpacing);
@@ -149,12 +220,12 @@ struct imageDocument *findRows(int *imageVector, int imageWidth, int imageHeight
 	return currentImageDoc;
 }
 
-int scaleImageMatrix(int *imageVector, int imageWidth, struct imageDocumentChar *imageDocChar, int **charImage)
+int standardizeImageMatrix(int *imageVector, int imageWidth, struct imageDocumentChar *imageDocChar, int **charImage)
 {
 	int width = imageDocChar->x2 - imageDocChar->x1;
 	int height = imageDocChar->y2 - imageDocChar->y1;
 
-	printf("%d, %d\n", width, height);
+	// ignore things, spaces, which do not need sizing
 	if ((width == 0) || height == 0) {
 		return 0;
 	}
@@ -170,6 +241,8 @@ int scaleImageMatrix(int *imageVector, int imageWidth, struct imageDocumentChar 
 	int padTop = 0;
 	int padBottom = newHeight;
 
+	// only if the area is rectangular
+	// determine how to fix the shorter dimension
 	if (height != width) {
 		if (height > width) {
 			padding = height - width;
@@ -178,24 +251,23 @@ int scaleImageMatrix(int *imageVector, int imageWidth, struct imageDocumentChar 
 			newWidth = paddingQ + width + paddingQ + paddingR;
 
 			padLeft = paddingQ;
-			padRight = paddingQ + width - 1;
+			padRight = padLeft + width - 1;
 		} else {
 			padding = width - height;
 			paddingQ = (int)round((padding / 2));
 			paddingR = padding - (paddingQ * 2);
-			newHeight = paddingQ + width + paddingQ + paddingR;
+			newHeight = paddingQ + paddingR + height + paddingQ;
 
-			padTop = paddingQ;
-			padBottom = paddingQ + width - 1;
+			padTop = paddingQ + paddingR;
+			padBottom = padTop + height - 1;
 		}
 	}
-	printf(" %d, %d, %d, %d\n", width, height, newWidth, newHeight);
-	printf(" >> %d, %d, %d, %d\n", padding, paddingQ, padLeft, padTop);
-
+	// create a working image
 	int *tempImage = (int*)malloc(newWidth * newHeight * sizeof(int));
 	memset(tempImage, 0, (newWidth * newHeight * sizeof(int)));
 
 	int k = 0;
+	int l = 0;
 	int imagePixel = 0;
 	int currentPixel = 0;
 	for (int i = 0; i < newHeight; ++i) {
@@ -203,30 +275,30 @@ int scaleImageMatrix(int *imageVector, int imageWidth, struct imageDocumentChar 
 			k = 0;
 			for (int j = 0; j < newWidth; ++j) {
 				if ((j >= padLeft) && (j <= padRight)) {
-					imagePixel = ((imageDocChar->y1 + i) * imageWidth) + (imageDocChar->x1 + k);
+					imagePixel = ((imageDocChar->y1 + l) * imageWidth) + (imageDocChar->x1 + k);
 					currentPixel = (i * newWidth) + j;
 					++k;
 					
-					//printf(" >> imageVector[%d] = %d\n", imagePixel, imageVector[imagePixel]);
 					tempImage[currentPixel] = imageVector[imagePixel];
-					//printf(" %d,%d >> tempImage[%d] = %d\n", i, j, currentPixel, tempImage[currentPixel]);
-				}
-
-				else {
-					currentPixel = (i * newWidth) + j;
-					tempImage[currentPixel] = 128;
 				}
 			}
+			++l;
 		}
 	}
 
-					char fName[100] = "./tst/tst-1-";
-					char buffer[16];
-					snprintf(buffer, sizeof(buffer), "%d-%d.png", imageDocChar->y1, imageDocChar->x1);
-					strcat(fName, buffer);
-					//printf(" %d,%d = %s\n", newWidth, newHeight, fName);
-					write_png_file(tempImage, newWidth, newHeight, fName);
+	if (DEBUG_SAVE_STANDARDIZED_CHARACTERS) {
+		char fName[100] = "./tst/tst-1-";
+		char buffer[16];
+		snprintf(buffer, sizeof(buffer), "%d-%d.png", imageDocChar->y1, imageDocChar->x1);
+		strcat(fName, buffer);
+		// write_png_file(tempImage, newWidth, newHeight, fName);
 
+		int targetImageWidth = 16;
+		int *resizedImage = (int*)malloc(targetImageWidth * targetImageWidth * sizeof(int));
+		memset(resizedImage, 0, (targetImageWidth * targetImageWidth * sizeof(int)));
+		resizeImage(tempImage, resizedImage, newWidth, newHeight, targetImageWidth, targetImageWidth);
+		write_png_file(resizedImage, targetImageWidth, targetImageWidth, fName);
+	}
 
 	*charImage = tempImage;
 	return 1;
@@ -237,9 +309,9 @@ void ocrCharacter(int *imageVector, int imageWidth, struct imageDocumentChar *im
 	if (imageDocChar) {
 		printf("%c", imageDocChar->value);
 		int *charImage;
-		int scaleOk = scaleImageMatrix(imageVector, imageWidth, imageDocChar, &charImage);
+		int standardizeOk = standardizeImageMatrix(imageVector, imageWidth, imageDocChar, &charImage);
 
-		if (scaleOk) {
+		if (standardizeOk) {
 			free(charImage);
 		}
 	}
