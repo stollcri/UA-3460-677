@@ -22,7 +22,7 @@ struct charactersspace {
 	double *weights;
 };
 
-void readEigenspaceFromFile(char *filename)
+void readEigenspaceFromFile(char *filename, double **eigenimagespace)
 {
 	int klimit = 0;
 	int dimensions = 0;
@@ -33,16 +33,24 @@ void readEigenspaceFromFile(char *filename)
 		// read header
 		fread(&klimit, sizeof(int), 1, inFile);
 		fread(&dimensions, sizeof(int), 1, inFile);
-		// printf("klimit: %i \n", klimit);
-		// printf("dimensions: %i \n", dimensions);
+
+		double *tempEigenSpace = (double*)malloc(klimit * dimensions * sizeof(double));
+		memset(tempEigenSpace, 0, (klimit * dimensions * sizeof(double)));
 
 		// read eigenimagespace (doubles)
+		int k = 0;
+		double currentEigen = 0;
 		for (int i = 0; i < klimit; ++i) {
 			for (int j = 0; j < dimensions; ++j) {
-				/* code */
+				fread(&currentEigen, sizeof(double), 1, inFile);
+				tempEigenSpace[k] = currentEigen;
+				++k;
 			}
 		}
 
+		*eigenimagespace = tempEigenSpace;
+
+		/*
 		// read means (doubles)
 		double currentMean = 0;
 		for (int i = 0; i < klimit; ++i) {
@@ -50,15 +58,21 @@ void readEigenspaceFromFile(char *filename)
 			// we are not using them, discard
 		}
 
+		double *tempEigenValues = (double*)malloc(klimit * sizeof(double));
+		memset(tempEigenValues, 0, (klimit * sizeof(double)));
+
 		// read eigenvalues (doubles)
+		double currentEigenValue = 0;
 		for (int i = 0; i < klimit; ++i) {
-			/* code */
+			fread(&currentEigenValue, sizeof(double), 1, inFile);
+			tempEigenSpace[k] = currentEigen;
 		}
+		*/
 	}
 	fclose(inFile);
 }
 
-void readCharactersFromFile(char *filename)
+void readCharactersFromFile(char *filename, char **characters, double **characterWeights)
 {
 	int characterCount = 0;
 
@@ -67,31 +81,53 @@ void readCharactersFromFile(char *filename)
 	if (inFile) {
 		// read header
 		fread(&characterCount, sizeof(int), 1, inFile);
-		// printf("characterCount: %i \n", characterCount);
+
+		char *tempCharacters = (char*)malloc(characterCount * sizeof(char));
+		memset(tempCharacters, 0, (characterCount * sizeof(char)));
 
 		// read characters (chars)
+		int j = 0;
 		char currentChar = 0;
 		for (int i = 0; i < characterCount; ++i) {
 			fread(&currentChar, sizeof(char), 1, inFile);
-			// printf("%c ", currentChar);
+			tempCharacters[j] = currentChar;
+			++j;
 		}
-		// printf("\n");
+
+		*characters = tempCharacters;
+
+
+		double *tempCharacterWeights = (double*)malloc(characterCount * sizeof(double));
+		memset(tempCharacterWeights, 0, (characterCount * sizeof(double)));
 
 		// read weights (doubles)
+		j = 0;
 		double currentWeight = 0;
 		for (int i = 0; i < characterCount; ++i) {
 			fread(&currentWeight, sizeof(double), 1, inFile);
-			// printf("%2.16f ", currentWeight);
+			tempCharacterWeights[j] = currentWeight;
+			++j;
 		}
-		// printf("\n");
+
+		*characterWeights = tempCharacterWeights;
 	}
 	fclose(inFile);
 }
 
-void loadKnowledge(char *eigenspaceFile, char *charactersFile)
+void loadEigenspace(char *eigenspaceFile, double **eigenspace)
 {
-	readEigenspaceFromFile(eigenspaceFile);
-	readCharactersFromFile(charactersFile);
+	double *tempEigenspace;
+	readEigenspaceFromFile(eigenspaceFile, &tempEigenspace);
+	*eigenspace = tempEigenspace;
+}
+
+void loadCharacters(char *charactersFile, char **characters, double **characterWeights)
+{
+	char *tempCharacters;
+	double *tempCharacterWeights;
+	readCharactersFromFile(charactersFile, &tempCharacters, &tempCharacterWeights);
+	*characters = tempCharacters;
+	*characterWeights = tempCharacterWeights;
 }
 
 #endif
