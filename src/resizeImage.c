@@ -2,6 +2,9 @@
  * http://www.compuphase.com/graphic/scale.htm
  */
 
+#ifndef RESIZEIMAGE_C
+#define RESIZEIMAGE_C
+
 void ScaleLineA(int *Target, int *Source, int SrcWidth, int TgtWidth)
 {
 	int NumPixels = TgtWidth;
@@ -163,3 +166,5 @@ void sizeSquareImage(int *source, int *target, int sourceSides, int targetSides)
 		resizeImage(source, target, sourceSides, sourceSides, targetSides, targetSides);
 	}
 }
+
+#endif
