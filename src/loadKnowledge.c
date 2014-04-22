@@ -73,7 +73,7 @@ int readEigenspaceFromFile(char *filename, double **eigenimagespace)
 	return dimensions;
 }
 
-void readCharactersFromFile(char *filename, char **characters, double **characterWeights)
+int readCharactersFromFile(char *filename, int dimensionality, char **characters, double **characterWeights)
 {
 	int characterCount = 0;
 
@@ -98,13 +98,13 @@ void readCharactersFromFile(char *filename, char **characters, double **characte
 		*characters = tempCharacters;
 
 
-		double *tempCharacterWeights = (double*)malloc(characterCount * sizeof(double));
-		memset(tempCharacterWeights, 0, (characterCount * sizeof(double)));
+		double *tempCharacterWeights = (double*)malloc(characterCount * dimensionality * sizeof(double));
+		memset(tempCharacterWeights, 0, (characterCount * dimensionality * sizeof(double)));
 
 		// read weights (doubles)
 		j = 0;
 		double currentWeight = 0;
-		for (int i = 0; i < characterCount; ++i) {
+		for (int i = 0; i < (characterCount * (dimensionality-1)); ++i) {
 			fread(&currentWeight, sizeof(double), 1, inFile);
 			tempCharacterWeights[j] = currentWeight;
 			++j;
@@ -113,6 +113,7 @@ void readCharactersFromFile(char *filename, char **characters, double **characte
 		*characterWeights = tempCharacterWeights;
 	}
 	fclose(inFile);
+	return characterCount;
 }
 
 int loadEigenspace(char *eigenspaceFile, double **eigenspace)
@@ -124,13 +125,15 @@ int loadEigenspace(char *eigenspaceFile, double **eigenspace)
 	return dimensionality;
 }
 
-void loadCharacters(char *charactersFile, char **characters, double **characterWeights)
+int loadCharacters(char *charactersFile, int dimensionality, char **characters, double **characterWeights)
 {
+	int characterCount = 0;
 	char *tempCharacters;
 	double *tempCharacterWeights;
-	readCharactersFromFile(charactersFile, &tempCharacters, &tempCharacterWeights);
+	characterCount = readCharactersFromFile(charactersFile, dimensionality, &tempCharacters, &tempCharacterWeights);
 	*characters = tempCharacters;
 	*characterWeights = tempCharacterWeights;
+	return characterCount;
 }
 
 #endif
