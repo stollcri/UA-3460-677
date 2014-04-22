@@ -3,6 +3,7 @@
  * Christopher Stoll, 2014
  */
 
+#include <unistd.h>
 #include "loadKnowledge.c"
 #include "imageDocument.c"
 #include "loadDocument.c"
@@ -10,7 +11,7 @@
 
 #define DEFAULT_DIMENSIONALITY 256
 
-int main(int argc, char const *argv[])
+void runOcr(char *targetfile)
 {
 	int klimit = 0;
 	int dimensionality = 0;
@@ -25,7 +26,7 @@ int main(int argc, char const *argv[])
 	int *imageVector;
 	int imageWidth = 0;
 	int imageHeight = 0;
-	imageVector = loadDocument("./tst/RightsOfManB.png", &imageWidth, &imageHeight);
+	imageVector = loadDocument(targetfile, &imageWidth, &imageHeight);
 	if (!imageVector || !imageWidth || !imageHeight) {
 		printf("Error loading PNG text image.\n");
 		exit(1);
@@ -50,4 +51,19 @@ int main(int argc, char const *argv[])
 	ocrKit->imageWidth = imageWidth;
 	ocrKit->imageDoc = imageDoc;
 	startOcr(ocrKit);
+}
+
+int main(int argc, char const *argv[])
+{
+	if (argc > 1) {
+		char *filename = (char*)argv[1];
+		if (access(filename, R_OK) != -1) {
+			runOcr(filename);
+		} else {
+			printf("Error reading file %s\n", argv[1]);
+		}
+	} else {
+		printf("Usage:\n");
+		printf(" %s filename\n", argv[0]);
+	}
 }

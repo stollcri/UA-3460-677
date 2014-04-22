@@ -10,7 +10,7 @@ ocr:
 	${CC} ${CFLAGS} -o ./bin/ocr-cpu ./src/ocr-cpu.c
 
 test:
-	./bin/ocr-cpu
+	./bin/ocr-cpu "./tst/RightsOfManB.png"
 
 clean:
 	-rm ./bin/ocr-cpu
