@@ -22,7 +22,7 @@ struct charactersspace {
 	double *weights;
 };
 
-void readEigenspaceFromFile(char *filename, double **eigenimagespace)
+int readEigenspaceFromFile(char *filename, double **eigenimagespace)
 {
 	int klimit = 0;
 	int dimensions = 0;
@@ -70,6 +70,7 @@ void readEigenspaceFromFile(char *filename, double **eigenimagespace)
 		*/
 	}
 	fclose(inFile);
+	return dimensions;
 }
 
 void readCharactersFromFile(char *filename, char **characters, double **characterWeights)
@@ -114,11 +115,13 @@ void readCharactersFromFile(char *filename, char **characters, double **characte
 	fclose(inFile);
 }
 
-void loadEigenspace(char *eigenspaceFile, double **eigenspace)
+int loadEigenspace(char *eigenspaceFile, double **eigenspace)
 {
+	int dimensionality = 0;
 	double *tempEigenspace;
-	readEigenspaceFromFile(eigenspaceFile, &tempEigenspace);
+	dimensionality = readEigenspaceFromFile(eigenspaceFile, &tempEigenspace);
 	*eigenspace = tempEigenspace;
+	return dimensionality;
 }
 
 void loadCharacters(char *charactersFile, char **characters, double **characterWeights)

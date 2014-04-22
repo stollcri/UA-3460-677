@@ -14,6 +14,36 @@
 #define KLIMIT 64
 #define DEBUG_SAVE_STANDARDIZED_CHARACTERS 0
 
+struct OCRkit {
+	double *eigenImageSpace;
+	int dimensionality;
+	
+	char *characters;
+	double *characterWeights;
+
+	int *imageVector;
+	int imageWidth;
+	struct imageDocument *imageDoc;
+};
+
+struct OCRkit *newOCRkit()
+{
+	struct OCRkit *newKit;
+	newKit = (struct OCRkit*)malloc(sizeof(struct OCRkit));
+
+	newKit->eigenImageSpace = NULL;
+	newKit->dimensionality = 0;
+	
+	newKit->characters = NULL;
+	newKit->characterWeights = NULL;
+
+	newKit->imageVector = NULL;
+	newKit->imageWidth = 0;
+	newKit->imageDoc = NULL;
+
+	return newKit;
+}
+
 int standardizeImageMatrix(int *imageVector, int imageWidth, struct imageDocumentChar *imageDocChar, int **charImage)
 {
 	int width = imageDocChar->x2 - imageDocChar->x1;
@@ -97,19 +127,24 @@ int standardizeImageMatrix(int *imageVector, int imageWidth, struct imageDocumen
 	return 1;
 }
 
-void projectCandidate(int *imageVector, double *eigenImageSpace)
+void projectCandidate(int *charImageVector, struct OCRkit *ocrKit)
 {
-	// double
+	double *tempWeights = (double*)malloc(KLIMIT * sizeof(double));
+	memset(tempWeights, 0, (KLIMIT * sizeof(double)));
+
+	for (int i = 0; i < KLIMIT; ++i) {
+		/* code */
+	}
 }
 
-void ocrCharacter(double *eigenImageSpace, char *characters, double *characterWeights, int *imageVector, int imageWidth, struct imageDocumentChar *imageDocChar)
+void ocrCharacter(struct OCRkit *ocrKit, struct imageDocumentChar *imageDocChar)
 {
 	if (imageDocChar) {
 		printf("%c", imageDocChar->value);
 		int *charImage;
-		int standardizeOk = standardizeImageMatrix(imageVector, imageWidth, imageDocChar, &charImage);
+		int standardizeOk = standardizeImageMatrix(ocrKit->imageVector, ocrKit->imageWidth, imageDocChar, &charImage);
 
-		projectCandidate(charImage, eigenImageSpace);
+		projectCandidate(charImage, ocrKit);
 
 		if (standardizeOk) {
 			free(charImage);
@@ -117,20 +152,20 @@ void ocrCharacter(double *eigenImageSpace, char *characters, double *characterWe
 	}
 }
 
-void ocrCharLoop(double *eigenImageSpace, char *characters, double *characterWeights, int *imageVector, int imageWidth, struct imageDocumentLine *imageDocLine)
+void ocrCharLoop(struct OCRkit *ocrKit, struct imageDocumentLine *imageDocLine)
 {
 	if (imageDocLine) {
 		if (imageDocLine->characters) {
 			struct imageDocumentChar *currentChar = imageDocLine->characters;
 			struct imageDocumentChar *nextChar;
 
-			ocrCharacter(eigenImageSpace, characters, characterWeights, imageVector, imageWidth, currentChar);
+			ocrCharacter(ocrKit, currentChar);
 
 			while (currentChar->nextChar) {
 				nextChar = currentChar->nextChar;
 				currentChar = nextChar;
 
-				ocrCharacter(eigenImageSpace, characters, characterWeights, imageVector, imageWidth, currentChar);
+				ocrCharacter(ocrKit, currentChar);
 			}
 
 			freeImageDocumentChar(nextChar);
@@ -138,20 +173,21 @@ void ocrCharLoop(double *eigenImageSpace, char *characters, double *characterWei
 	}
 }
 
-void ocrLineLoop(double *eigenImageSpace, char *characters, double *characterWeights, int *imageVector, int imageWidth, struct imageDocument *imageDoc)
+void ocrLineLoop(struct OCRkit *ocrKit)
 {
+	struct imageDocument *imageDoc = ocrKit->imageDoc;
 	if (imageDoc) {
 		if (imageDoc->lines) {
 			struct imageDocumentLine *currentLine = imageDoc->lines;
 			struct imageDocumentLine *nextLine;
 
-			ocrCharLoop(eigenImageSpace, characters, characterWeights, imageVector, imageWidth, currentLine);
+			ocrCharLoop(ocrKit, currentLine);
 
 			while (currentLine->nextLine) {
 				nextLine = currentLine->nextLine;
 				currentLine = nextLine;
 
-				ocrCharLoop(eigenImageSpace, characters, characterWeights, imageVector, imageWidth, currentLine);
+				ocrCharLoop(ocrKit, currentLine);
 			}
 
 			freeImageDocumentLine(nextLine);
@@ -159,9 +195,9 @@ void ocrLineLoop(double *eigenImageSpace, char *characters, double *characterWei
 	}
 }
 
-void startOcr(double *eigenImageSpace, char *characters, double *characterWeights, int *imageVector, int imageWidth, struct imageDocument *imageDoc)
+void startOcr(struct OCRkit *ocrKit)
 {
-	ocrLineLoop(eigenImageSpace, characters, characterWeights, imageVector, imageWidth, imageDoc);
+	ocrLineLoop(ocrKit);
 }
 
 #endif
