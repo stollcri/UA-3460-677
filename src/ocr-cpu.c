@@ -12,9 +12,10 @@
 
 int main(int argc, char const *argv[])
 {
+	int klimit = 0;
 	int dimensionality = 0;
 	double *eigenImageSpace;
-	dimensionality = loadEigenspace("./dat/eigenspace", &eigenImageSpace);
+	loadEigenspace("./dat/eigenspace", &eigenImageSpace, &klimit, &dimensionality);
 	
 	char *characters;
 	int characterCount = 0;
@@ -39,8 +40,9 @@ int main(int argc, char const *argv[])
 
 	struct OCRkit *ocrKit;
 	ocrKit = newOCRkit();
-	ocrKit->eigenImageSpace = eigenImageSpace;
+	ocrKit->klimit = klimit;
 	ocrKit->dimensionality = dimensionality;
+	ocrKit->eigenImageSpace = eigenImageSpace;
 	ocrKit->characters = characters;
 	ocrKit->characterCount = characterCount;
 	ocrKit->characterWeights = characterWeights;

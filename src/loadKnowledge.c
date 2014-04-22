@@ -22,26 +22,26 @@ struct charactersspace {
 	double *weights;
 };
 
-int readEigenspaceFromFile(char *filename, double **eigenimagespace)
+void readEigenspaceFromFile(char *filename, double **eigenimagespace, int *klimit, int *dimensions)
 {
-	int klimit = 0;
-	int dimensions = 0;
+	int tmpKlim = 0;
+	int tmpDims = 0;
 
 	FILE *inFile;
 	inFile = fopen(filename, "r");
 	if (inFile) {
 		// read header
-		fread(&klimit, sizeof(int), 1, inFile);
-		fread(&dimensions, sizeof(int), 1, inFile);
+		fread(&tmpKlim, sizeof(int), 1, inFile);
+		fread(&tmpDims, sizeof(int), 1, inFile);
 
-		double *tempEigenSpace = (double*)malloc(klimit * dimensions * sizeof(double));
-		memset(tempEigenSpace, 0, (klimit * dimensions * sizeof(double)));
+		double *tempEigenSpace = (double*)malloc(tmpKlim * tmpDims * sizeof(double));
+		memset(tempEigenSpace, 0, (tmpKlim * tmpDims * sizeof(double)));
 
 		// read eigenimagespace (doubles)
 		int k = 0;
 		double currentEigen = 0;
-		for (int i = 0; i < klimit; ++i) {
-			for (int j = 0; j < dimensions; ++j) {
+		for (int i = 0; i < tmpKlim; ++i) {
+			for (int j = 0; j < tmpDims; ++j) {
 				fread(&currentEigen, sizeof(double), 1, inFile);
 				tempEigenSpace[k] = currentEigen;
 				++k;
@@ -49,11 +49,13 @@ int readEigenspaceFromFile(char *filename, double **eigenimagespace)
 		}
 
 		*eigenimagespace = tempEigenSpace;
+		*klimit = tmpKlim;
+		*dimensions = tmpDims;
 
 		/*
 		// read means (doubles)
 		double currentMean = 0;
-		for (int i = 0; i < klimit; ++i) {
+		for (int i = 0; i < tmpKlim; ++i) {
 			fread(&currentMean, sizeof(double), 1, inFile);
 			// we are not using them, discard
 		}
@@ -63,14 +65,13 @@ int readEigenspaceFromFile(char *filename, double **eigenimagespace)
 
 		// read eigenvalues (doubles)
 		double currentEigenValue = 0;
-		for (int i = 0; i < klimit; ++i) {
+		for (int i = 0; i < tmpKlim; ++i) {
 			fread(&currentEigenValue, sizeof(double), 1, inFile);
 			tempEigenSpace[k] = currentEigen;
 		}
 		*/
 	}
 	fclose(inFile);
-	return dimensions;
 }
 
 int readCharactersFromFile(char *filename, int dimensionality, char **characters, double **characterWeights)
@@ -116,13 +117,15 @@ int readCharactersFromFile(char *filename, int dimensionality, char **characters
 	return characterCount;
 }
 
-int loadEigenspace(char *eigenspaceFile, double **eigenspace)
+void loadEigenspace(char *eigenspaceFile, double **eigenspace, int *klimit, int *dimensionality)
 {
-	int dimensionality = 0;
+	int tmpKlim = 0;
+	int tmpDims = 0;
 	double *tempEigenspace;
-	dimensionality = readEigenspaceFromFile(eigenspaceFile, &tempEigenspace);
+	readEigenspaceFromFile(eigenspaceFile, &tempEigenspace, &tmpKlim, &tmpDims);
+	*klimit = tmpKlim;
+	*dimensionality = tmpDims;
 	*eigenspace = tempEigenspace;
-	return dimensionality;
 }
 
 int loadCharacters(char *charactersFile, int dimensionality, char **characters, double **characterWeights)

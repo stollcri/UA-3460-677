@@ -11,13 +11,13 @@
 #include "imageDocument.c"
 #include "resizeImage.c"
 
-#define KLIMIT 64
 #define STANDARD_IMAGE_SIDE 16
 #define DEBUG_SAVE_STANDARDIZED_CHARACTERS 1
 
 struct OCRkit {
-	double *eigenImageSpace;
+	int klimit;
 	int dimensionality;
+	double *eigenImageSpace;
 	
 	char *characters;
 	int characterCount;
@@ -33,8 +33,9 @@ struct OCRkit *newOCRkit()
 	struct OCRkit *newKit;
 	newKit = (struct OCRkit*)malloc(sizeof(struct OCRkit));
 
-	newKit->eigenImageSpace = NULL;
+	newKit->klimit = 0;
 	newKit->dimensionality = 0;
+	newKit->eigenImageSpace = NULL;
 	
 	newKit->characters = NULL;
 	newKit->characterCount = 0;
@@ -141,15 +142,16 @@ int standardizeImageMatrix(int *imageVector, int imageWidth, struct imageDocumen
 
 double *projectCandidate(int *charImageVector, struct OCRkit *ocrKit)
 {
-	double *tempWeights = (double*)malloc(KLIMIT * sizeof(double));
-	memset(tempWeights, 0, (KLIMIT * sizeof(double)));
+	int klimit = round(ocrKit->klimit / 4);
+	double *tempWeights = (double*)malloc(klimit * sizeof(double));
+	memset(tempWeights, 0, (klimit * sizeof(double)));
 
 	double *eigenImageSpace = ocrKit->eigenImageSpace;
 	int dimensionality = ocrKit->dimensionality;
 
 	int currentEigen = 0;
 	double weight = 0;
-	for (int i = 0; i < KLIMIT; ++i) {
+	for (int i = 0; i < klimit; ++i) {
 		weight = 0;
 		for (int j = 0; j < (STANDARD_IMAGE_SIDE * STANDARD_IMAGE_SIDE); ++j) {
 			currentEigen = (i * dimensionality) + j;
@@ -162,6 +164,7 @@ double *projectCandidate(int *charImageVector, struct OCRkit *ocrKit)
 
 char nearestNeighborCPU(struct OCRkit *ocrKit, double *questionWeights)
 {
+	int klimit = round(ocrKit->klimit / 4);
 	int dimensionality = ocrKit->dimensionality;
 	int characterCount = ocrKit->characterCount;
 	double *characterWeights = ocrKit->characterWeights;
@@ -179,7 +182,7 @@ char nearestNeighborCPU(struct OCRkit *ocrKit, double *questionWeights)
 		numerator = 0;
 		denominatorA = 0;
 		denominatorB = 0;
-		for (int j = 0; j < KLIMIT; ++j) {
+		for (int j = 0; j < klimit; ++j) {
 			// TODO: verify correct index is being used here
 			charWeightIndex = (i * (dimensionality-1)) + j;
 			numerator += questionWeights[j] * characterWeights[charWeightIndex];
