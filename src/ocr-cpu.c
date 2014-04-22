@@ -8,6 +8,8 @@
 #include "loadDocument.c"
 #include "ocrLib.c"
 
+#define DEFAULT_DIMENSIONALITY 256
+
 int main(int argc, char const *argv[])
 {
 	int dimensionality = 0;
@@ -15,8 +17,9 @@ int main(int argc, char const *argv[])
 	dimensionality = loadEigenspace("./dat/eigenspace", &eigenImageSpace);
 	
 	char *characters;
+	int characterCount = 0;
 	double *characterWeights;
-	loadCharacters("./dat/characters", &characters, &characterWeights);
+	characterCount = loadCharacters("./dat/characters", dimensionality, &characters, &characterWeights);
 
 	int *imageVector;
 	int imageWidth = 0;
@@ -39,6 +42,7 @@ int main(int argc, char const *argv[])
 	ocrKit->eigenImageSpace = eigenImageSpace;
 	ocrKit->dimensionality = dimensionality;
 	ocrKit->characters = characters;
+	ocrKit->characterCount = characterCount;
 	ocrKit->characterWeights = characterWeights;
 	ocrKit->imageVector = imageVector;
 	ocrKit->imageWidth = imageWidth;

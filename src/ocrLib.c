@@ -12,13 +12,15 @@
 #include "resizeImage.c"
 
 #define KLIMIT 64
-#define DEBUG_SAVE_STANDARDIZED_CHARACTERS 0
+#define STANDARD_IMAGE_SIDE 16
+#define DEBUG_SAVE_STANDARDIZED_CHARACTERS 1
 
 struct OCRkit {
 	double *eigenImageSpace;
 	int dimensionality;
 	
 	char *characters;
+	int characterCount;
 	double *characterWeights;
 
 	int *imageVector;
@@ -35,6 +37,7 @@ struct OCRkit *newOCRkit()
 	newKit->dimensionality = 0;
 	
 	newKit->characters = NULL;
+	newKit->characterCount = 0;
 	newKit->characterWeights = NULL;
 
 	newKit->imageVector = NULL;
@@ -110,44 +113,108 @@ int standardizeImageMatrix(int *imageVector, int imageWidth, struct imageDocumen
 		}
 	}
 
-	int targetImageWidth = 16;
+	int targetImageWidth = STANDARD_IMAGE_SIDE;
 	int *resizedImage = (int*)malloc(targetImageWidth * targetImageWidth * sizeof(int));
 	memset(resizedImage, 0, (targetImageWidth * targetImageWidth * sizeof(int)));
 	resizeImage(tempImage, resizedImage, newWidth, newHeight, targetImageWidth, targetImageWidth);
 
 	if (DEBUG_SAVE_STANDARDIZED_CHARACTERS) {
 		char fName[100] = "./tst/tst-1-";
-		char buffer[16];
+		char buffer[32];
 		snprintf(buffer, sizeof(buffer), "%d-%d.png", imageDocChar->y1, imageDocChar->x1);
 		strcat(fName, buffer);
 		write_png_file(resizedImage, targetImageWidth, targetImageWidth, fName);
 	}
 
 	*charImage = resizedImage;
+	// for (int i = 0; i < (STANDARD_IMAGE_SIDE*STANDARD_IMAGE_SIDE); ++i) {
+	// 	printf("%3d ", resizedImage[i]);
+	// 	if (!(i % STANDARD_IMAGE_SIDE)) {
+	// 		printf("\n");
+	// 	}
+	// 	if (!(i % (STANDARD_IMAGE_SIDE*STANDARD_IMAGE_SIDE))) {
+	// 		printf("\n");
+	// 	}
+	// }
 	return 1;
 }
 
-void projectCandidate(int *charImageVector, struct OCRkit *ocrKit)
+double *projectCandidate(int *charImageVector, struct OCRkit *ocrKit)
 {
 	double *tempWeights = (double*)malloc(KLIMIT * sizeof(double));
 	memset(tempWeights, 0, (KLIMIT * sizeof(double)));
 
+	double *eigenImageSpace = ocrKit->eigenImageSpace;
+	int dimensionality = ocrKit->dimensionality;
+
+	int currentEigen = 0;
+	double weight = 0;
 	for (int i = 0; i < KLIMIT; ++i) {
-		/* code */
+		weight = 0;
+		for (int j = 0; j < (STANDARD_IMAGE_SIDE * STANDARD_IMAGE_SIDE); ++j) {
+			currentEigen = (i * dimensionality) + j;
+			weight += (charImageVector[j] * eigenImageSpace[currentEigen]);
+		}
+		tempWeights[i] = weight;
 	}
+	return tempWeights;
+}
+
+char nearestNeighborCPU(struct OCRkit *ocrKit, double *questionWeights)
+{
+	int dimensionality = ocrKit->dimensionality;
+	int characterCount = ocrKit->characterCount;
+	double *characterWeights = ocrKit->characterWeights;
+	char *characters = ocrKit->characters;
+
+	int charWeightIndex = 0;
+	double numerator = 0;
+	double denominatorA = 0;
+	double denominatorB = 0;
+	double totalScore = 0;
+	double maxScore = -999999;
+	char answer = '-';
+
+	for (int i = 0; i < characterCount; ++i) {
+		numerator = 0;
+		denominatorA = 0;
+		denominatorB = 0;
+		for (int j = 0; j < KLIMIT; ++j) {
+			// TODO: verify correct index is being used here
+			charWeightIndex = (i * (dimensionality-1)) + j;
+			numerator += questionWeights[j] * characterWeights[charWeightIndex];
+			denominatorA += questionWeights[j] * questionWeights[j];
+			denominatorB += characterWeights[charWeightIndex] * characterWeights[charWeightIndex];
+			if (denominatorA && denominatorB) {
+				totalScore = numerator / (sqrt(denominatorA) * sqrt(denominatorB));
+			} else {
+				totalScore = 0;
+			}
+		}
+		// printf("%d %c: %f -- %f => %f\n", i, characters[i], characterWeights[charWeightIndex], totalScore, maxScore);
+
+		if (totalScore > maxScore) {
+			maxScore = totalScore;
+			answer = characters[i];
+		}
+	}
+	return answer;
 }
 
 void ocrCharacter(struct OCRkit *ocrKit, struct imageDocumentChar *imageDocChar)
 {
 	if (imageDocChar) {
-		printf("%c", imageDocChar->value);
+		//printf("%c", imageDocChar->value);
 		int *charImage;
 		int standardizeOk = standardizeImageMatrix(ocrKit->imageVector, ocrKit->imageWidth, imageDocChar, &charImage);
-
-		projectCandidate(charImage, ocrKit);
-
 		if (standardizeOk) {
+			double *weights = projectCandidate(charImage, ocrKit);
 			free(charImage);
+
+			char answer = nearestNeighborCPU(ocrKit, weights);
+			printf("%c", answer);
+		} else {
+			printf("%c", imageDocChar->value);
 		}
 	}
 }
