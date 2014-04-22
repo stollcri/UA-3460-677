@@ -4,7 +4,9 @@
  */
 
 #include "loadKnowledge.c"
+#include "imageDocument.c"
 #include "loadDocument.c"
+#include "ocrLib.c"
 
 int main(int argc, char const *argv[])
 {

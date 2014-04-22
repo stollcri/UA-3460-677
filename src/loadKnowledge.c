@@ -6,7 +6,9 @@
 #ifndef LOADKNOWLEDGE_C
 #define LOADKNOWLEDGE_C
 
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 struct eigenimagespace {
 	int sampleCount;

@@ -6,12 +6,12 @@
 #ifndef LOADDOCUMENT_C
 #define LOADDOCUMENT_C
 
+#include <stdlib.h>
 #include <stdbool.h>
 #include <math.h>
 #include <string.h>
 #include "libpngHelper.c"
 #include "imageDocument.c"
-#include "resizeImage.c"
 
 #define LOADDOCUMENT_VERBOSE 1
 #define SPLIT_THRESHHOLD 128

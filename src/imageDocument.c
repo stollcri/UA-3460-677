@@ -6,6 +6,8 @@
 #ifndef IMAGEDOCUMENT_C
 #define IMAGEDOCUMENT_C
 
+#include <stdlib.h>
+ 
 struct imageDocumentChar {
 	int x1;
 	int y1;
