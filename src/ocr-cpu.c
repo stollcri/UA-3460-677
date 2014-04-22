@@ -11,7 +11,7 @@
 
 #define DEFAULT_DIMENSIONALITY 256
 
-void runOcr(char *targetfile)
+void runOcr(char *targetfile, int peserveNewline)
 {
 	int klimit = 0;
 	int dimensionality = 0;
@@ -51,6 +51,8 @@ void runOcr(char *targetfile)
 	ocrKit->imageWidth = imageWidth;
 	ocrKit->imageDoc = imageDoc;
 	startOcr(ocrKit);
+
+	printDocument(imageDoc, peserveNewline);
 }
 
 int main(int argc, char const *argv[])
@@ -58,7 +60,7 @@ int main(int argc, char const *argv[])
 	if (argc > 1) {
 		char *filename = (char*)argv[1];
 		if (access(filename, R_OK) != -1) {
-			runOcr(filename);
+			runOcr(filename, 1);
 		} else {
 			printf("Error reading file %s\n", argv[1]);
 		}

@@ -12,7 +12,7 @@
 #include "resizeImage.c"
 
 #define STANDARD_IMAGE_SIDE 16
-#define DEBUG_SAVE_STANDARDIZED_CHARACTERS 1
+#define DEBUG_SAVE_STANDARDIZED_CHARACTERS 0
 #define DEBUG_PRINT_STANDARDIZED_CHARACTERS 0
 
 struct OCRkit {
@@ -219,9 +219,11 @@ void ocrCharacter(struct OCRkit *ocrKit, struct imageDocumentChar *imageDocChar)
 			free(charImage);
 
 			char answer = nearestNeighborCPU(ocrKit, weights);
-			printf("%c", answer);
+			imageDocChar->value = answer;
+			// printf("%c", answer);
 		} else {
-			printf("%c", imageDocChar->value);
+			imageDocChar->value = imageDocChar->value;
+			// printf("%c", imageDocChar->value);
 		}
 	}
 }

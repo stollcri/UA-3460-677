@@ -136,4 +136,39 @@ void addCharToLine(struct imageDocumentLine *targetLine, struct imageDocumentCha
 	}
 }
 
+void printDocument(struct imageDocument *targetDocument, int preserveNewLine)
+{
+	if (targetDocument) {
+		if (targetDocument->lines) {
+			struct imageDocumentLine *currentLine = targetDocument->lines;
+			struct imageDocumentLine *nextLine;
+
+			struct imageDocumentChar *currentChar;
+			struct imageDocumentChar *nextChar;
+			
+			while (currentLine->nextLine) {
+				currentChar = currentLine->characters;
+
+				while (currentChar->nextChar) {
+					printf("%c", currentChar->value);
+
+					nextChar = currentChar->nextChar;
+					currentChar = nextChar;
+				}
+				if (preserveNewLine) {
+					printf("%c", currentChar->value);
+				}
+
+				nextLine = currentLine->nextLine;
+				currentLine = nextLine;
+			}
+
+			freeImageDocumentChar(nextChar);
+			freeImageDocumentChar(currentChar);
+			freeImageDocumentLine(nextLine);
+			freeImageDocumentLine(currentLine);
+		}
+	}
+}
+
 #endif
