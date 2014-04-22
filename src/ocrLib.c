@@ -13,6 +13,7 @@
 
 #define STANDARD_IMAGE_SIDE 16
 #define DEBUG_SAVE_STANDARDIZED_CHARACTERS 1
+#define DEBUG_PRINT_STANDARDIZED_CHARACTERS 0
 
 struct OCRkit {
 	int klimit;
@@ -117,26 +118,29 @@ int standardizeImageMatrix(int *imageVector, int imageWidth, struct imageDocumen
 	int targetImageWidth = STANDARD_IMAGE_SIDE;
 	int *resizedImage = (int*)malloc(targetImageWidth * targetImageWidth * sizeof(int));
 	memset(resizedImage, 0, (targetImageWidth * targetImageWidth * sizeof(int)));
-	resizeImage(tempImage, resizedImage, newWidth, newHeight, targetImageWidth, targetImageWidth);
-
+	sizeSquareImage(tempImage, resizedImage, newWidth, targetImageWidth);
+	
 	if (DEBUG_SAVE_STANDARDIZED_CHARACTERS) {
 		char fName[100] = "./tst/tst-1-";
 		char buffer[32];
 		snprintf(buffer, sizeof(buffer), "%d-%d.png", imageDocChar->y1, imageDocChar->x1);
 		strcat(fName, buffer);
 		write_png_file(resizedImage, targetImageWidth, targetImageWidth, fName);
+		// write_png_file(tempImage, newWidth, newHeight, fName);
 	}
 
 	*charImage = resizedImage;
-	// for (int i = 0; i < (STANDARD_IMAGE_SIDE*STANDARD_IMAGE_SIDE); ++i) {
-	// 	printf("%3d ", resizedImage[i]);
-	// 	if (!(i % STANDARD_IMAGE_SIDE)) {
-	// 		printf("\n");
-	// 	}
-	// 	if (!(i % (STANDARD_IMAGE_SIDE*STANDARD_IMAGE_SIDE))) {
-	// 		printf("\n");
-	// 	}
-	// }
+	if (DEBUG_PRINT_STANDARDIZED_CHARACTERS) {
+		for (int i = 0; i < (STANDARD_IMAGE_SIDE*STANDARD_IMAGE_SIDE); ++i) {
+			printf("%3d ", resizedImage[i]);
+			if (!(i % STANDARD_IMAGE_SIDE)) {
+				printf("\n");
+			}
+			if (!(i % (STANDARD_IMAGE_SIDE*STANDARD_IMAGE_SIDE))) {
+				printf("\n");
+			}
+		}
+	}
 	return 1;
 }
 
@@ -176,7 +180,7 @@ char nearestNeighborCPU(struct OCRkit *ocrKit, double *questionWeights)
 	double denominatorB = 0;
 	double totalScore = 0;
 	double maxScore = -999999;
-	char answer = '-';
+	char answer = '~';
 
 	for (int i = 0; i < characterCount; ++i) {
 		numerator = 0;
@@ -194,7 +198,7 @@ char nearestNeighborCPU(struct OCRkit *ocrKit, double *questionWeights)
 				totalScore = 0;
 			}
 		}
-		// printf("%d %c: %f -- %f => %f\n", i, characters[i], characterWeights[charWeightIndex], totalScore, maxScore);
+		// printf("%d %c: %2.16f -- %f => %f\n", i, characters[i], characterWeights[charWeightIndex], totalScore, maxScore);
 
 		if (totalScore > maxScore) {
 			maxScore = totalScore;

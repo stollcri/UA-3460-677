@@ -14,7 +14,7 @@
 #include "imageDocument.c"
 
 #define LOADDOCUMENT_VERBOSE 1
-#define SPLIT_THRESHHOLD 128
+#define SPLIT_THRESHHOLD 192
 #define MAX_IMAGE_DEPTH 255
 
 #define DEBUG_SAVE_INDIVIDUAL_CHARACTERS 0
@@ -183,6 +183,29 @@ struct imageDocument *findRows(int *imageVector, int imageWidth, int imageHeight
 		for (int j = 0; j < imageWidth; ++j) {
 			currentPixel = (i * imageWidth) + j;
 			pixelIverse = imageDepth - imageVector[currentPixel];
+
+			// increase contrast
+			if (pixelIverse > 224) {
+				pixelIverse += round(pixelIverse * .6);
+				if (pixelIverse > 255) {
+					pixelIverse = 255;
+				}
+			} else if (pixelIverse > 192) {
+				pixelIverse += round(pixelIverse * .4);
+				if (pixelIverse > 255) {
+					pixelIverse = 255;
+				}
+			} else if (pixelIverse > 128) {
+				pixelIverse += round(pixelIverse * .2);
+				if (pixelIverse > 255) {
+					pixelIverse = 255;
+				}
+			} else if (pixelIverse < 128) {
+				pixelIverse -= round(pixelIverse * .4);
+				if (pixelIverse < 0) {
+					pixelIverse = 0;
+				}
+			}
 
 			// store inverted pixel
 			// assume text is normally black on white background,
