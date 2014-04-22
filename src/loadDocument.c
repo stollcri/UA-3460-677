@@ -18,7 +18,6 @@
 #define MAX_IMAGE_DEPTH 255
 
 #define DEBUG_SAVE_INDIVIDUAL_CHARACTERS 0
-#define DEBUG_SAVE_STANDARDIZED_CHARACTERS 0
 
 struct imageDocumentLine *findCharacters(int *imageVector, int imageWidth, int rowBegin, int rowEnd, int *spacing)
 {
@@ -220,160 +219,21 @@ struct imageDocument *findRows(int *imageVector, int imageWidth, int imageHeight
 	return currentImageDoc;
 }
 
-int standardizeImageMatrix(int *imageVector, int imageWidth, struct imageDocumentChar *imageDocChar, int **charImage)
-{
-	int width = imageDocChar->x2 - imageDocChar->x1;
-	int height = imageDocChar->y2 - imageDocChar->y1;
-
-	// ignore things, spaces, which do not need sizing
-	if ((width == 0) || height == 0) {
-		return 0;
-	}
-
-	int padding = 0;
-	int paddingQ = 0;
-	int paddingR = 0;
-	int newWidth = width;
-	int newHeight = height;
-
-	int padLeft = 0;
-	int padRight = newWidth;
-	int padTop = 0;
-	int padBottom = newHeight;
-
-	// only if the area is rectangular
-	// determine how to fix the shorter dimension
-	if (height != width) {
-		if (height > width) {
-			padding = height - width;
-			paddingQ = (int)round((padding / 2));
-			paddingR = padding - (paddingQ * 2);
-			newWidth = paddingQ + width + paddingQ + paddingR;
-
-			padLeft = paddingQ;
-			padRight = padLeft + width - 1;
-		} else {
-			padding = width - height;
-			paddingQ = (int)round((padding / 2));
-			paddingR = padding - (paddingQ * 2);
-			newHeight = paddingQ + paddingR + height + paddingQ;
-
-			padTop = paddingQ + paddingR;
-			padBottom = padTop + height - 1;
-		}
-	}
-	// create a working image
-	int *tempImage = (int*)malloc(newWidth * newHeight * sizeof(int));
-	memset(tempImage, 0, (newWidth * newHeight * sizeof(int)));
-
-	int k = 0;
-	int l = 0;
-	int imagePixel = 0;
-	int currentPixel = 0;
-	for (int i = 0; i < newHeight; ++i) {
-		if ((i >= padTop) && i <= padBottom) {
-			k = 0;
-			for (int j = 0; j < newWidth; ++j) {
-				if ((j >= padLeft) && (j <= padRight)) {
-					imagePixel = ((imageDocChar->y1 + l) * imageWidth) + (imageDocChar->x1 + k);
-					currentPixel = (i * newWidth) + j;
-					++k;
-					
-					tempImage[currentPixel] = imageVector[imagePixel];
-				}
-			}
-			++l;
-		}
-	}
-
-	if (DEBUG_SAVE_STANDARDIZED_CHARACTERS) {
-		char fName[100] = "./tst/tst-1-";
-		char buffer[16];
-		snprintf(buffer, sizeof(buffer), "%d-%d.png", imageDocChar->y1, imageDocChar->x1);
-		strcat(fName, buffer);
-		// write_png_file(tempImage, newWidth, newHeight, fName);
-
-		int targetImageWidth = 16;
-		int *resizedImage = (int*)malloc(targetImageWidth * targetImageWidth * sizeof(int));
-		memset(resizedImage, 0, (targetImageWidth * targetImageWidth * sizeof(int)));
-		resizeImage(tempImage, resizedImage, newWidth, newHeight, targetImageWidth, targetImageWidth);
-		write_png_file(resizedImage, targetImageWidth, targetImageWidth, fName);
-	}
-
-	*charImage = tempImage;
-	return 1;
-}
-
-void ocrCharacter(int *imageVector, int imageWidth, struct imageDocumentChar *imageDocChar)
-{
-	if (imageDocChar) {
-		printf("%c", imageDocChar->value);
-		int *charImage;
-		int standardizeOk = standardizeImageMatrix(imageVector, imageWidth, imageDocChar, &charImage);
-
-		if (standardizeOk) {
-			free(charImage);
-		}
-	}
-}
-
-void ocrCharLoop(int *imageVector, int imageWidth, struct imageDocumentLine *imageDocLine)
-{
-	if (imageDocLine) {
-		if (imageDocLine->characters) {
-			struct imageDocumentChar *currentChar = imageDocLine->characters;
-			struct imageDocumentChar *nextChar;
-
-			ocrCharacter(imageVector, imageWidth, currentChar);
-
-			while (currentChar->nextChar) {
-				nextChar = currentChar->nextChar;
-				currentChar = nextChar;
-
-				ocrCharacter(imageVector, imageWidth, currentChar);
-			}
-
-			freeImageDocumentChar(nextChar);
-		}
-	}
-}
-
-void ocrLineLoop(int *imageVector, int imageWidth, struct imageDocument *imageDoc)
-{
-	if (imageDoc) {
-		if (imageDoc->lines) {
-			struct imageDocumentLine *currentLine = imageDoc->lines;
-			struct imageDocumentLine *nextLine;
-
-			ocrCharLoop(imageVector, imageWidth, currentLine);
-
-			while (currentLine->nextLine) {
-				nextLine = currentLine->nextLine;
-				currentLine = nextLine;
-
-				ocrCharLoop(imageVector, imageWidth, currentLine);
-			}
-
-			freeImageDocumentLine(nextLine);
-		}
-	}
-}
-
-void startOcr(int *imageVector, int imageWidth, struct imageDocument *imageDoc)
-{
-	ocrLineLoop(imageVector, imageWidth, imageDoc);
-}
-
-void loadDocument(char *filename)
+int *loadDocument(char *filename, int *imageWidth, int *imageHeight)
 {
 	int *imageVector;
-	int imageWidth = 0;
-	int imageHeight = 0;
-	imageVector = readPNGFile(filename, &imageWidth, &imageHeight, LOADDOCUMENT_VERBOSE);
+	imageVector = readPNGFile(filename, imageWidth, imageHeight, LOADDOCUMENT_VERBOSE);
+	return imageVector;
+}
+
+struct imageDocument *processDocument(int *imageVector, int imageWidth, int imageHeight)
+{
 	if (imageVector && imageWidth && imageHeight) {
 		struct imageDocument *imageDoc;
 		imageDoc = findRows(imageVector, imageWidth, imageHeight, MAX_IMAGE_DEPTH);
-		startOcr(imageVector, imageWidth, imageDoc);
+		return imageDoc;
+	} else {
+		return NULL;
 	}
 }
 
