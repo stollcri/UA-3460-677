@@ -60,8 +60,8 @@ void readEigenspaceFromFile(char *filename, double **eigenimagespace, int *klimi
 			// we are not using them, discard
 		}
 
-		double *tempEigenValues = (double*)malloc(klimit * sizeof(double));
-		memset(tempEigenValues, 0, (klimit * sizeof(double)));
+		double *tempEigenValues = (double*)malloc(tmpKlim * sizeof(double));
+		memset(tempEigenValues, 0, (tmpKlim * sizeof(double)));
 
 		// read eigenvalues (doubles)
 		double currentEigenValue = 0;
