@@ -6,6 +6,7 @@
 #ifndef KNN_C
 #define KNN_C
 
+#include <math.h>
 #include "ocrKit.c"
 #include <sys/time.h>
 
