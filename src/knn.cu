@@ -150,7 +150,7 @@ char nearestNeighbor(struct OCRkit *ocrKit, double *questionWeights)
 	gettimeofday(&stop, NULL);
 
 	if (DEBUG_PRINT_TIME) {
-		printf("Time: %u us \n", stop.tv_usec - start.tv_usec);
+		printf("Time: %u us \n", (unsigned int)(stop.tv_usec - start.tv_usec));
 	}
 
 	return answer;
