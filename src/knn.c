@@ -34,11 +34,11 @@ char nearestNeighborCPU(struct OCRkit *ocrKit, double *questionWeights)
 			numerator += questionWeights[j] * characterWeights[charWeightIndex];
 			denominatorA += questionWeights[j] * questionWeights[j];
 			denominatorB += characterWeights[charWeightIndex] * characterWeights[charWeightIndex];
-			if (denominatorA && denominatorB) {
-				totalScore = numerator / (sqrt(denominatorA) * sqrt(denominatorB));
-			} else {
-				totalScore = 0;
-			}
+		}
+		if (denominatorA && denominatorB) {
+			totalScore = numerator / (sqrt(denominatorA) * sqrt(denominatorB));
+		} else {
+			totalScore = 0;
 		}
 		// printf("%d %c: %2.16f -- %f => %f\n", i, characters[i], characterWeights[charWeightIndex], totalScore, maxScore);
 
