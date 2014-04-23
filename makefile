@@ -1,5 +1,14 @@
-CC = cc
-NVCC = cc
+OS := $(shell uname)
+
+ifeq ($(OS),Darwin)
+	CC = cc
+	NVCC = cc
+else
+	CC = c99
+	NVCC = cc
+endif
+
+
 CFLAGS = -I/usr/local/include/libpng16 -L/usr/local/lib -lpng16
 NVCFLAGS = -I/usr/local/include/libpng16 -L/usr/local/lib -lpng16
 
