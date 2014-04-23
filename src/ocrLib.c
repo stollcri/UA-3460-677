@@ -133,48 +133,6 @@ double *projectCandidate(int *charImageVector, struct OCRkit *ocrKit)
 	return tempWeights;
 }
 
-char nearestNeighborCPU(struct OCRkit *ocrKit, double *questionWeights)
-{
-	int klimit = round(ocrKit->klimit / 4);
-	int dimensionality = ocrKit->dimensionality;
-	int characterCount = ocrKit->characterCount;
-	double *characterWeights = ocrKit->characterWeights;
-	char *characters = ocrKit->characters;
-
-	int charWeightIndex = 0;
-	double numerator = 0;
-	double denominatorA = 0;
-	double denominatorB = 0;
-	double totalScore = 0;
-	double maxScore = -999999;
-	char answer = '~';
-
-	for (int i = 0; i < characterCount; ++i) {
-		numerator = 0;
-		denominatorA = 0;
-		denominatorB = 0;
-		for (int j = 0; j < klimit; ++j) {
-			// TODO: verify correct index is being used here
-			charWeightIndex = (i * (dimensionality-1)) + j;
-			numerator += questionWeights[j] * characterWeights[charWeightIndex];
-			denominatorA += questionWeights[j] * questionWeights[j];
-			denominatorB += characterWeights[charWeightIndex] * characterWeights[charWeightIndex];
-			if (denominatorA && denominatorB) {
-				totalScore = numerator / (sqrt(denominatorA) * sqrt(denominatorB));
-			} else {
-				totalScore = 0;
-			}
-		}
-		// printf("%d %c: %2.16f -- %f => %f\n", i, characters[i], characterWeights[charWeightIndex], totalScore, maxScore);
-
-		if (totalScore > maxScore) {
-			maxScore = totalScore;
-			answer = characters[i];
-		}
-	}
-	return answer;
-}
-
 void ocrCharacter(struct OCRkit *ocrKit, struct imageDocumentChar *imageDocChar)
 {
 	if (imageDocChar) {
@@ -185,7 +143,7 @@ void ocrCharacter(struct OCRkit *ocrKit, struct imageDocumentChar *imageDocChar)
 			double *weights = projectCandidate(charImage, ocrKit);
 			free(charImage);
 
-			char answer = nearestNeighborCPU(ocrKit, weights);
+			char answer = nearestNeighbor(ocrKit, weights);
 			imageDocChar->value = answer;
 			// printf("%c", answer);
 		} else {

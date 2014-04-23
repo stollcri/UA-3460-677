@@ -7,7 +7,9 @@
 #include "loadKnowledge.c"
 #include "imageDocument.c"
 #include "loadDocument.c"
-#include "ocrLibGPU.c"
+#include "ocrKit.c"
+#include "knn.cu"
+#include "ocrLib.c"
 
 #define DEFAULT_DIMENSIONALITY 256
 
