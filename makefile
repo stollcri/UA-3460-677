@@ -29,7 +29,7 @@ ocr-cpu:
 
 ocr-gpu:
 	mkdir -p ./bin/
-	${NVCC} ${NVCFLAGS} -o ./bin/ocr-cpu ./src/ocr-cpu.c
+	${NVCC} ${NVCFLAGS} -o ./bin/ocr-gpu ./src/ocr-cpu.c
 
 
 
