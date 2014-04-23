@@ -32,7 +32,7 @@ struct imageDocument {
 struct imageDocument *newImageDocument()
 {
 	struct imageDocument *newDocument;
-	newDocument = (struct imageDocument*) malloc(sizeof(struct imageDocument));
+	newDocument = (struct imageDocument*)malloc(sizeof(struct imageDocument));
 
 	newDocument->lines = NULL;
 
@@ -42,7 +42,7 @@ struct imageDocument *newImageDocument()
 struct imageDocumentLine *newImageDocumentLine()
 {
 	struct imageDocumentLine *newDocumentLine;
-	newDocumentLine = (struct imageDocumentLine*) malloc(sizeof(struct imageDocumentLine));
+	newDocumentLine = (struct imageDocumentLine*)malloc(sizeof(struct imageDocumentLine));
 
 	newDocumentLine->characters = NULL;
 	newDocumentLine->nextLine = NULL;
@@ -54,7 +54,7 @@ struct imageDocumentLine *newImageDocumentLine()
 struct imageDocumentChar *newImageDocumentChar(x1, y1, x2, y2, value)
 {
 	struct imageDocumentChar *newDocumentChar;
-	newDocumentChar = (struct imageDocumentChar*) malloc(sizeof(struct imageDocumentChar));
+	newDocumentChar = (struct imageDocumentChar*)malloc(sizeof(struct imageDocumentChar));
 
 	newDocumentChar->x1 = x1;
 	newDocumentChar->y1 = y1;
