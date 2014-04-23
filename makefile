@@ -7,7 +7,7 @@ ifeq ($(OS),Darwin)
 	NVCFLAGS = -I/usr/local/include/libpng16 -L/usr/local/lib -lpng16
 else
 	CC = cc
-	NVCC = cc
+	NVCC = nvcc
 	CFLAGS = -std=c99 -lm -I/usr/include/libpng12 -L/usr/lib/x86_64-linux-gnu/ -lpng12
 	NVCFLAGS = -arch=sm_21 --compiler-options -std=c99 -I/usr/include/libpng12 -L/usr/lib/x86_64-linux-gnu/ -lpng12
 endif
