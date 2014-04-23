@@ -31,7 +31,7 @@ int *readPNGFile(char *filename, int *imageWidth, int *imageHeight, int verbosit
 
 	char header[PNG_BYTES_TO_CHECK];
 	fread(header, 1, PNG_BYTES_TO_CHECK, pngfile);
-	int is_png = !png_sig_cmp((png_const_bytep)header, 0, PNG_BYTES_TO_CHECK);
+	int is_png = !png_sig_cmp((png_bytep)header, 0, PNG_BYTES_TO_CHECK);
 	if (!is_png) {
 		if(verbosity > 0) {
 			fprintf(stderr, "Invalid PNG file: %s\n", filename);
