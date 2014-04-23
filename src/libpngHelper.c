@@ -104,7 +104,7 @@ int *readPNGFile(char *filename, int *imageWidth, int *imageHeight, int verbosit
 	int rPixel = 0;
 	int bPixel = 0;
 	int gPixel = 0;
-	int aPixel = 0;
+	//int aPixel = 0;
 	for(int y = 0; y < height; ++y) {
 		png_bytep row = row_pointers[y];
 		for(int x = 0; x < width; ++x) {
@@ -112,7 +112,7 @@ int *readPNGFile(char *filename, int *imageWidth, int *imageHeight, int verbosit
 			rPixel = (int)pixel[0];
 			gPixel = (int)pixel[1];
 			bPixel = (int)pixel[2];
-			aPixel = (int)pixel[3];
+			//aPixel = (int)pixel[3];
 
 			n = (y * width) + x;
 			if ((rPixel == gPixel) && (gPixel == bPixel)) {
@@ -147,8 +147,6 @@ int *readPNGFile(char *filename, int *imageWidth, int *imageHeight, int verbosit
 }
 
 void write_png_file(int *imageVector, int width, int height, char *filename) {
-	int y;
-
 	FILE *fp = fopen(filename, "wb");
 	if(!fp) abort();
 
@@ -183,8 +181,6 @@ void write_png_file(int *imageVector, int width, int height, char *filename) {
 
 	int i = 0;
 	for(int y = 0; y < height; y++) {
-		png_bytep row = row_pointers[y];
-
 		for(int z = 0; z < width; z++) {
 			row_pointers[y][z*4+0] = (png_byte)imageVector[i];
 			row_pointers[y][z*4+1] = (png_byte)imageVector[i];

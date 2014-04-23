@@ -36,7 +36,6 @@ struct imageDocumentLine *findCharacters(int *imageVector, int imageWidth, int r
 	bool blankCol = true;
 	int spaceCols = 0;
 	int pixelCols = 0;
-	int pixelColsBegin = 0;
 	int pixelColsEnd = 0;
 
 	int finalX1 = 0;
