@@ -146,7 +146,7 @@ void printDocument(struct imageDocument *targetDocument, int preserveNewLine)
 			struct imageDocumentChar *currentChar;
 			struct imageDocumentChar *nextChar;
 			
-			while (currentLine->nextLine) {
+			while (currentLine) {
 				currentChar = currentLine->characters;
 
 				while (currentChar->nextChar) {
