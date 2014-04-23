@@ -3,14 +3,15 @@ OS := $(shell uname)
 ifeq ($(OS),Darwin)
 	CC = cc
 	NVCC = cc
+	CFLAGS = -I/usr/local/include/libpng16 -L/usr/local/lib -lpng16
+	NVCFLAGS = -I/usr/local/include/libpng16 -L/usr/local/lib -lpng16
 else
 	CC = c99
 	NVCC = cc
+	CFLAGS = 
+	NVCFLAGS = 
 endif
 
-
-CFLAGS = -I/usr/local/include/libpng16 -L/usr/local/lib -lpng16
-NVCFLAGS = -I/usr/local/include/libpng16 -L/usr/local/lib -lpng16
 
 default: all
 
