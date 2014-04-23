@@ -7,6 +7,9 @@
 #define KNN_C
 
 #include "ocrKit.c"
+#include <sys/time.h>
+
+#define DEBUG_PRINT_TIME 1
 
 char nearestNeighborCPU(struct OCRkit *ocrKit, double *questionWeights)
 {
@@ -52,7 +55,18 @@ char nearestNeighborCPU(struct OCRkit *ocrKit, double *questionWeights)
 
 char nearestNeighbor(struct OCRkit *ocrKit, double *questionWeights)
 {
-	return nearestNeighborCPU(ocrKit, questionWeights);
+	struct timeval stop, start;
+	char answer = '?';
+
+	gettimeofday(&start, NULL);
+	answer = nearestNeighborCPU(ocrKit, questionWeights);
+	gettimeofday(&stop, NULL);
+
+	if (DEBUG_PRINT_TIME) {
+		printf("Time: %u us \n", stop.tv_usec - start.tv_usec);
+	}
+
+	return answer;
 }
 
 #endif
