@@ -22,7 +22,7 @@ struct charactersspace {
 	double *weights;
 };
 
-void readEigenspaceFromFile(char *filename, double **eigenimagespace, int *klimit, int *dimensions)
+int readEigenspaceFromFile(char *filename, double **eigenimagespace, int *klimit, int *dimensions)
 {
 	int tmpKlim = 0;
 	int tmpDims = 0;
@@ -70,8 +70,11 @@ void readEigenspaceFromFile(char *filename, double **eigenimagespace, int *klimi
 			tempEigenSpace[k] = currentEigen;
 		}
 		*/
+	} else {
+		printf("Knowledge file not found: %s\n", filename);
 	}
 	fclose(inFile);
+	return tmpKlim;
 }
 
 int readCharactersFromFile(char *filename, int dimensionality, char **characters, double **characterWeights)
@@ -112,20 +115,24 @@ int readCharactersFromFile(char *filename, int dimensionality, char **characters
 		}
 
 		*characterWeights = tempCharacterWeights;
+	} else {
+		printf("Knowledge file not found: %s\n", filename);
 	}
 	fclose(inFile);
 	return characterCount;
 }
 
-void loadEigenspace(char *eigenspaceFile, double **eigenspace, int *klimit, int *dimensionality)
+int loadEigenspace(char *eigenspaceFile, double **eigenspace, int *klimit, int *dimensionality)
 {
+	int kcount = 0;
 	int tmpKlim = 0;
 	int tmpDims = 0;
 	double *tempEigenspace;
-	readEigenspaceFromFile(eigenspaceFile, &tempEigenspace, &tmpKlim, &tmpDims);
+	kcount = readEigenspaceFromFile(eigenspaceFile, &tempEigenspace, &tmpKlim, &tmpDims);
 	*klimit = tmpKlim;
 	*dimensionality = tmpDims;
 	*eigenspace = tempEigenspace;
+	return kcount;
 }
 
 int loadCharacters(char *charactersFile, int dimensionality, char **characters, double **characterWeights)

@@ -15,15 +15,24 @@
 
 void runOcr(char *targetfile, int peserveNewline)
 {
+	int kcount = 0;
 	int klimit = 0;
 	int dimensionality = 0;
 	double *eigenImageSpace;
-	loadEigenspace("./dat/eigenspace", &eigenImageSpace, &klimit, &dimensionality);
-	
+	kcount = loadEigenspace("./dat/eigenspace", &eigenImageSpace, &klimit, &dimensionality);
+	if (!kcount) {
+		printf("No knowledge available.\n");
+		exit(1);
+	}
+
 	char *characters;
 	int characterCount = 0;
 	double *characterWeights;
 	characterCount = loadCharacters("./dat/characters", dimensionality, &characters, &characterWeights);
+	if (!characterCount) {
+		printf("No character knowledge available.\n");
+		exit(1);
+	}
 
 	int *imageVector;
 	int imageWidth = 0;
