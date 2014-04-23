@@ -8,46 +8,13 @@
 
 #include <stdlib.h>
 #include <math.h>
+#include "ocrKit.c"
 #include "imageDocument.c"
 #include "resizeImage.c"
 
 #define STANDARD_IMAGE_SIDE 16
 #define DEBUG_SAVE_STANDARDIZED_CHARACTERS 0
 #define DEBUG_PRINT_STANDARDIZED_CHARACTERS 0
-
-struct OCRkit {
-	int klimit;
-	int dimensionality;
-	double *eigenImageSpace;
-	
-	char *characters;
-	int characterCount;
-	double *characterWeights;
-
-	int *imageVector;
-	int imageWidth;
-	struct imageDocument *imageDoc;
-};
-
-struct OCRkit *newOCRkit()
-{
-	struct OCRkit *newKit;
-	newKit = (struct OCRkit*)malloc(sizeof(struct OCRkit));
-
-	newKit->klimit = 0;
-	newKit->dimensionality = 0;
-	newKit->eigenImageSpace = NULL;
-	
-	newKit->characters = NULL;
-	newKit->characterCount = 0;
-	newKit->characterWeights = NULL;
-
-	newKit->imageVector = NULL;
-	newKit->imageWidth = 0;
-	newKit->imageDoc = NULL;
-
-	return newKit;
-}
 
 int standardizeImageMatrix(int *imageVector, int imageWidth, struct imageDocumentChar *imageDocChar, int **charImage)
 {

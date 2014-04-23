@@ -1,16 +1,34 @@
 CC = cc
+NVCC = cc
 CFLAGS = -I/usr/local/include/libpng16 -L/usr/local/lib -lpng16
+NVCFLAGS = -I/usr/local/include/libpng16 -L/usr/local/lib -lpng16
 
 default: all
 
-.PHONY: all ocr test
-all: ocr test
+.PHONY: all ocr ocr-cpu ocr-gpu test test-cpu test-gpu
+all: ocr-cpu test-cpu
 
-ocr:
+
+
+ocr: ocr-cpu ocr-gpu
+
+ocr-cpu:
 	${CC} ${CFLAGS} -o ./bin/ocr-cpu ./src/ocr-cpu.c
 
-test:
+ocr-gpu:
+	${NVCC} ${NVCFLAGS} -o ./bin/ocr-cpu ./src/ocr-cpu.c
+
+
+
+test: test-cpu test-gpu
+
+test-cpu:
 	./bin/ocr-cpu "./tst/RightsOfManB.png"
+
+test-gpu:
+	./bin/ocr-gpu "./tst/RightsOfManB.png"
+
+
 
 clean:
 	-rm ./bin/ocr-cpu
