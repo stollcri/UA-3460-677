@@ -51,7 +51,7 @@ struct imageDocumentLine *newImageDocumentLine()
 	return newDocumentLine;
 }
 
-struct imageDocumentChar *newImageDocumentChar(x1, y1, x2, y2, value)
+struct imageDocumentChar *newImageDocumentChar(int x1, int y1, int x2, int y2, char value)
 {
 	struct imageDocumentChar *newDocumentChar;
 	newDocumentChar = (struct imageDocumentChar*)malloc(sizeof(struct imageDocumentChar));
