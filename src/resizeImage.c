@@ -100,7 +100,7 @@ static void sizeSquareImage(int *source, int *target, int sourceSides, int targe
 		int l = 0;
 		int modSkip = diff;
 		if (modSkip == 1) {
-			modSkip = (int)round(targetSides / 2);
+			modSkip = (int)(targetSides / 2);
 		}
 		for (int i = 0; i < targetSides; ++i) {
 			l = 0;

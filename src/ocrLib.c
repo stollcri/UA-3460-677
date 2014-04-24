@@ -42,7 +42,7 @@ static int standardizeImageMatrix(int *imageVector, int imageWidth, struct image
 	if (height != width) {
 		if (height > width) {
 			padding = height - width;
-			paddingQ = (int)round((padding / 2));
+			paddingQ = (int)(padding / 2);
 			paddingR = padding - (paddingQ * 2);
 			newWidth = paddingQ + width + paddingQ + paddingR;
 
@@ -50,7 +50,7 @@ static int standardizeImageMatrix(int *imageVector, int imageWidth, struct image
 			padRight = padLeft + width - 1;
 		} else {
 			padding = width - height;
-			paddingQ = (int)round((padding / 2));
+			paddingQ = (int)(padding / 2);
 			paddingR = padding - (paddingQ * 2);
 			newHeight = paddingQ + paddingR + height + paddingQ;
 
@@ -113,7 +113,7 @@ static int standardizeImageMatrix(int *imageVector, int imageWidth, struct image
 
 static double *projectCandidate(int *charImageVector, struct OCRkit *ocrKit)
 {
-	int klimit = (int)round(ocrKit->klimit / 4);
+	int klimit = (int)(ocrKit->klimit / 4);
 	double *tempWeights = (double*)malloc((unsigned long)klimit * sizeof(double));
 	memset(tempWeights, 0, ((unsigned long)klimit * sizeof(double)));
 

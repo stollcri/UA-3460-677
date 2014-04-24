@@ -8,11 +8,12 @@
 
 #include "ocrKit.c"
 #include <sys/time.h>
+#include <cutil.h>
 
 #define TRAINING_SET_SIZE = 78
 #define DEBUG_PRINT_TIME 1
 
-__global__ void nearestNeighborGPUa(int g_klimit, int g_dimensionality, double *g_charWeights, double *g_qWeights, int *g_scores)
+__global__ void nearestNeighborGPUa(int g_klimit, int g_dimensionality, double *g_charWeights, double *g_qWeights, double *g_scores)
 {
 	extern __shared__ double s_qWeights[];
 	int idx = (blockIdx.x * blockDim.x) + threadIdx.x;
@@ -54,7 +55,7 @@ static char launchNearestNeighborA(struct OCRkit *ocrKit, double *questionWeight
 {
 	// gather basic information
 	int characterCount = ocrKit->characterCount;
-	int klimit = round(ocrKit->klimit / 4);
+	int klimit = (ocrKit->klimit / 4);
 	int dimensionality = ocrKit->dimensionality;
 	// We are using a static declaration to get more shared memory
 	// A pitfall is if the eigen data is updated to include more characters
@@ -64,19 +65,19 @@ static char launchNearestNeighborA(struct OCRkit *ocrKit, double *questionWeight
 	// }
 
 	// allocate memory for character weights
-	cWeightMemSize = klimit * dimensionality * sizeof(double);
+	int cWeightMemSize = klimit * dimensionality * sizeof(double);
 	double *d_charWeights = NULL;
 	CUDA_SAFE_CALL(cudaMalloc((void**)&d_charWeights, cWeightMemSize));
 	CUDA_SAFE_CALL(cudaMemcpy(d_charWeights, ocrKit->characterWeights, cWeightMemSize, cudaMemcpyHostToDevice));
 
 	// allocate memory for candidate weights
-	qWeightMemSize = dimensionality * sizeof(double);
+	int qWeightMemSize = dimensionality * sizeof(double);
 	double *d_qWeights = NULL;
 	CUDA_SAFE_CALL(cudaMalloc((void**)&d_qWeights, qWeightMemSize));
 	CUDA_SAFE_CALL(cudaMemcpy(d_qWeights, questionWeights, cWeightMemSize, cudaMemcpyHostToDevice));
 
 	// allocate memory for scores
-	scoreMemSize = characterCount * sizeof(double);
+	int scoreMemSize = characterCount * sizeof(double);
 	double *h_scores = (double*)malloc(scoreMemSize);
 	double *d_scores = NULL;
 	CUDA_SAFE_CALL(cudaMalloc((void**)&d_scores, scoreMemSize));
@@ -93,6 +94,15 @@ static char launchNearestNeighborA(struct OCRkit *ocrKit, double *questionWeight
 
 	// get the scores
 	CUDA_SAFE_CALL(cudaMemcpy(h_scores, d_scores, scoreMemSize, cudaMemcpyDeviceToHost));
+
+	int maxScore = -999;
+	for (int i = 0; i < characterCount; ++i) {
+		if (h_scores[i] > maxScore) {
+			maxScore = h_scores[i];
+			answer = ocrKit->characters[i];
+		}
+	}
+	return answer;
 }
 
 static char nearestNeighbor(struct OCRkit *ocrKit, double *questionWeights)
