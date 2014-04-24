@@ -19,7 +19,7 @@ __global__ void nearestNeighborGPUa(int g_klimit, int g_dimensionality, double *
 	int idx = (blockIdx.x * blockDim.x) + threadIdx.x;
 
 	// load shared memory
-	if (idx < g_klimit) {
+	if (idx < g_dimensionality) {
 		s_qWeights[idx] = g_qWeights[idx];
 	}
 	__syncthreads();
@@ -79,17 +79,15 @@ static char launchNearestNeighborA(struct OCRkit *ocrKit, double *questionWeight
 	// allocate memory for scores
 	int scoreMemSize = characterCount * sizeof(double);
 	double *h_scores = (double*)malloc(scoreMemSize);
-	memset(h_scores, 0, characterCount * sizeof(double));
 	double *d_scores = NULL;
 	CUDA_SAFE_CALL(cudaMalloc((void**)&d_scores, scoreMemSize));
-	CUDA_SAFE_CALL(cudaMemcpy(d_scores, h_scores, scoreMemSize, cudaMemcpyHostToDevice));
 
 	// set up parallel dimensions
 	int threadsPerBlock = characterCount;
 	int blocksPerGrid = 1;
 	dim3 dimGrid(blocksPerGrid);
 	dim3 dimBlock(threadsPerBlock);
-	int sharedMemSize = klimit * sizeof(double);
+	int sharedMemSize = dimensionality * sizeof(double);
 
 	// run the kernel
 	nearestNeighborGPUa<<< dimGrid,dimBlock,sharedMemSize >>>(klimit, dimensionality, d_charWeights, d_qWeights, d_scores);
