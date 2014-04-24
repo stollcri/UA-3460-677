@@ -45,8 +45,6 @@ __global__ void nearestNeighborGPUa(int g_klimit, int g_dimensionality, double *
 		totalScore = numerator / (sqrt(denominatorA) * sqrt(denominatorB));
 	}
 
-	__syncthreads(); 
-
 	// save cosine similarity score
 	g_scores[idx] = totalScore;
 }
@@ -92,9 +90,11 @@ static char launchNearestNeighborA(struct OCRkit *ocrKit, double *questionWeight
 	// run the kernel
 	nearestNeighborGPUa<<< dimGrid,dimBlock,sharedMemSize >>>(klimit, dimensionality, d_charWeights, d_qWeights, d_scores);
 	cudaThreadSynchronize();
+	checkCUDAError("kernel");
 
 	// get the scores
 	CUDA_SAFE_CALL(cudaMemcpy(h_scores, d_scores, scoreMemSize, cudaMemcpyDeviceToHost));
+	checkCUDAError("memcpy");
 
 	char answer = '?';
 	int maxScore = -999;
@@ -105,6 +105,15 @@ static char launchNearestNeighborA(struct OCRkit *ocrKit, double *questionWeight
 		}
 	}
 	return answer;
+}
+
+void checkCUDAError(const char *msg)
+{
+	cudaError_t err = cudaGetLastError();
+	if(cudaSuccess != err)  {
+		fprintf(stderr, "Cuda error: %s: %s.\n", msg, cudaGetErrorString( err) );
+		exit(EXIT_FAILURE);
+	}
 }
 
 static char nearestNeighbor(struct OCRkit *ocrKit, double *questionWeights)
