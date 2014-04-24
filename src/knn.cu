@@ -28,10 +28,10 @@ __global__ void nearestNeighborGPUa(int g_klimit, int g_dimensionality, double *
 	int idx = (blockIdx.x * blockDim.x) + threadIdx.x;
 
 	// load shared memory
-	if (idx < g_dimensionality) {
-		s_qWeights[idx] = g_qWeights[idx];
-	}
-	__syncthreads();
+	// if (idx < g_dimensionality) {
+	// 	s_qWeights[idx] = g_qWeights[idx];
+	// }
+	// __syncthreads();
 
 	// set some rgisters
 	int charWeightIndex = 0;
@@ -44,9 +44,9 @@ __global__ void nearestNeighborGPUa(int g_klimit, int g_dimensionality, double *
 	// calulate the cosine similarity
 	for (int j = 0; j < g_klimit; ++j) {
 		charWeightIndex = charWeightIndexPart + j;
-
-		numerator += s_qWeights[j] * g_charWeights[charWeightIndex];
-		denominatorA += s_qWeights[j] * s_qWeights[j];
+		printf("idx:%d j:%d charWeightIndexPart:%d, charWeightIndex:%d\n", idx, j, charWeightIndexPart, charWeightIndex);
+		numerator += g_qWeights[j] * g_charWeights[charWeightIndex];
+		denominatorA += g_qWeights[j] * g_qWeights[j];
 		denominatorB += g_charWeights[charWeightIndex] * g_charWeights[charWeightIndex];
 	}
 
@@ -55,7 +55,7 @@ __global__ void nearestNeighborGPUa(int g_klimit, int g_dimensionality, double *
 	}
 
 	// save cosine similarity score
-	g_scores[idx] = totalScore;
+	//g_scores[idx] = totalScore;
 }
 
 static char launchNearestNeighborA(struct OCRkit *ocrKit, double *questionWeights)
