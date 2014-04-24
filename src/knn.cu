@@ -95,6 +95,7 @@ static char launchNearestNeighborA(struct OCRkit *ocrKit, double *questionWeight
 	// get the scores
 	CUDA_SAFE_CALL(cudaMemcpy(h_scores, d_scores, scoreMemSize, cudaMemcpyDeviceToHost));
 
+	char answer = '?';
 	int maxScore = -999;
 	for (int i = 0; i < characterCount; ++i) {
 		if (h_scores[i] > maxScore) {
