@@ -8,8 +8,8 @@ ifeq ($(OS),Darwin)
 else
 	CC = nvcc
 	NVCC = nvcc
-	CFLAGS = -arch=sm_21 --compiler-options -std=c99 -I/usr/include/libpng12 -L/usr/lib/x86_64-linux-gnu/ -lpng12
-	NVCFLAGS = -arch=sm_21 --compiler-options -std=c99 -I/usr/include/libpng12 -L/usr/lib/x86_64-linux-gnu/ -lpng12
+	CFLAGS = --compiler-options -std=c99 -arch=sm_21 -I/usr/include/libpng12 -L/usr/lib/x86_64-linux-gnu/ -lpng12 -I/usr/local/cutil/include -L/usr/local/cutil/lib -lcutil_x86_64
+	NVCFLAGS = --compiler-options -std=c99 -arch=sm_21 -I/usr/include/libpng12 -L/usr/lib/x86_64-linux-gnu/ -lpng12 -I/usr/local/cutil/include -L/usr/local/cutil/lib -lcutil_x86_64
 endif
 
 
