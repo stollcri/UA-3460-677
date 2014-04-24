@@ -13,6 +13,15 @@
 #define TRAINING_SET_SIZE = 78
 #define DEBUG_PRINT_TIME 1
 
+static void checkCUDAError(const char *msg)
+{
+	cudaError_t err = cudaGetLastError();
+	if(cudaSuccess != err)  {
+		fprintf(stderr, "Cuda error: %s: %s.\n", msg, cudaGetErrorString( err) );
+		exit(EXIT_FAILURE);
+	}
+}
+
 __global__ void nearestNeighborGPUa(int g_klimit, int g_dimensionality, double *g_charWeights, double *g_qWeights, double *g_scores)
 {
 	extern __shared__ double s_qWeights[];
@@ -105,15 +114,6 @@ static char launchNearestNeighborA(struct OCRkit *ocrKit, double *questionWeight
 		}
 	}
 	return answer;
-}
-
-void checkCUDAError(const char *msg)
-{
-	cudaError_t err = cudaGetLastError();
-	if(cudaSuccess != err)  {
-		fprintf(stderr, "Cuda error: %s: %s.\n", msg, cudaGetErrorString( err) );
-		exit(EXIT_FAILURE);
-	}
 }
 
 static char nearestNeighbor(struct OCRkit *ocrKit, double *questionWeights)
