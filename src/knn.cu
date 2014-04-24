@@ -54,7 +54,7 @@ __global__ void nearestNeighborGPUa(int g_klimit, int g_dimensionality, double *
 		totalScore = numerator / (sqrt(denominatorA) * sqrt(denominatorB));
 	}
 
-	save cosine similarity score
+	// save cosine similarity score
 	g_scores[idx] = totalScore;
 }
 
