@@ -22,7 +22,7 @@ struct OCRkit {
 	struct imageDocument *imageDoc;
 };
 
-struct OCRkit *newOCRkit()
+static struct OCRkit *newOCRkit()
 {
 	struct OCRkit *newKit;
 	newKit = (struct OCRkit*)malloc(sizeof(struct OCRkit));

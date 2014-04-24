@@ -12,9 +12,9 @@
 
 #define DEBUG_PRINT_TIME 1
 
-char nearestNeighborCPU(struct OCRkit *ocrKit, double *questionWeights)
+static char nearestNeighborCPU(struct OCRkit *ocrKit, double *questionWeights)
 {
-	int klimit = round(ocrKit->klimit / 4);
+	int klimit = (int)round(ocrKit->klimit / 4);
 	int dimensionality = ocrKit->dimensionality;
 	int characterCount = ocrKit->characterCount;
 	double *characterWeights = ocrKit->characterWeights;
@@ -54,7 +54,7 @@ char nearestNeighborCPU(struct OCRkit *ocrKit, double *questionWeights)
 	return answer;
 }
 
-char nearestNeighbor(struct OCRkit *ocrKit, double *questionWeights)
+static char nearestNeighbor(struct OCRkit *ocrKit, double *questionWeights)
 {
 	struct timeval stop, start;
 	char answer = '?';

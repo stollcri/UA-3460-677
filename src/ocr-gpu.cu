@@ -11,9 +11,7 @@
 #include "knn.cu"
 #include "ocrLib.c"
 
-#define DEFAULT_DIMENSIONALITY 256
-
-void runOcr(char *targetfile, int peserveNewline)
+static void runOcr(char *targetfile, int peserveNewline)
 {
 	int kcount = 0;
 	int klimit = 0;

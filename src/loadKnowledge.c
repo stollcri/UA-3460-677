@@ -22,7 +22,7 @@ struct charactersspace {
 	double *weights;
 };
 
-int readEigenspaceFromFile(char *filename, double **eigenimagespace, int *klimit, int *dimensions)
+static int readEigenspaceFromFile(char *filename, double **eigenimagespace, int *klimit, int *dimensions)
 {
 	int tmpKlim = 0;
 	int tmpDims = 0;
@@ -34,8 +34,8 @@ int readEigenspaceFromFile(char *filename, double **eigenimagespace, int *klimit
 		fread(&tmpKlim, sizeof(int), 1, inFile);
 		fread(&tmpDims, sizeof(int), 1, inFile);
 
-		double *tempEigenSpace = (double*)malloc(tmpKlim * tmpDims * sizeof(double));
-		memset(tempEigenSpace, 0, (tmpKlim * tmpDims * sizeof(double)));
+		double *tempEigenSpace = (double*)malloc((unsigned long)tmpKlim * (unsigned long)tmpDims * sizeof(double));
+		memset(tempEigenSpace, 0, ((unsigned long)tmpKlim * (unsigned long)tmpDims * sizeof(double)));
 
 		// read eigenimagespace (doubles)
 		int k = 0;
@@ -77,7 +77,7 @@ int readEigenspaceFromFile(char *filename, double **eigenimagespace, int *klimit
 	return tmpKlim;
 }
 
-int readCharactersFromFile(char *filename, int dimensionality, char **characters, double **characterWeights)
+static int readCharactersFromFile(char *filename, int dimensionality, char **characters, double **characterWeights)
 {
 	int characterCount = 0;
 
@@ -87,8 +87,8 @@ int readCharactersFromFile(char *filename, int dimensionality, char **characters
 		// read header
 		fread(&characterCount, sizeof(int), 1, inFile);
 
-		char *tempCharacters = (char*)malloc(characterCount * sizeof(char));
-		memset(tempCharacters, 0, (characterCount * sizeof(char)));
+		char *tempCharacters = (char*)malloc((unsigned long)characterCount * sizeof(char));
+		memset(tempCharacters, 0, ((unsigned long)characterCount * sizeof(char)));
 
 		// read characters (chars)
 		int j = 0;
@@ -102,8 +102,8 @@ int readCharactersFromFile(char *filename, int dimensionality, char **characters
 		*characters = tempCharacters;
 
 
-		double *tempCharacterWeights = (double*)malloc(characterCount * dimensionality * sizeof(double));
-		memset(tempCharacterWeights, 0, (characterCount * dimensionality * sizeof(double)));
+		double *tempCharacterWeights = (double*)malloc((unsigned long)characterCount * (unsigned long)dimensionality * sizeof(double));
+		memset(tempCharacterWeights, 0, ((unsigned long)characterCount * (unsigned long)dimensionality * sizeof(double)));
 
 		// read weights (doubles)
 		j = 0;
@@ -122,7 +122,7 @@ int readCharactersFromFile(char *filename, int dimensionality, char **characters
 	return characterCount;
 }
 
-int loadEigenspace(char *eigenspaceFile, double **eigenspace, int *klimit, int *dimensionality)
+static int loadEigenspace(char *eigenspaceFile, double **eigenspace, int *klimit, int *dimensionality)
 {
 	int kcount = 0;
 	int tmpKlim = 0;
@@ -135,7 +135,7 @@ int loadEigenspace(char *eigenspaceFile, double **eigenspace, int *klimit, int *
 	return kcount;
 }
 
-int loadCharacters(char *charactersFile, int dimensionality, char **characters, double **characterWeights)
+static int loadCharacters(char *charactersFile, int dimensionality, char **characters, double **characterWeights)
 {
 	int characterCount = 0;
 	char *tempCharacters;

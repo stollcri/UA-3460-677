@@ -20,7 +20,7 @@
  * @param  verbosity   Whether or not to print error messages to stderr
  * @return             Returns an array of integers representing the image pixels
  */
-int *readPNGFile(char *filename, int *imageWidth, int *imageHeight, int verbosity) {
+static int *readPNGFile(char *filename, int *imageWidth, int *imageHeight, int verbosity) {
 	FILE *pngfile = fopen(filename, "rb");
 	if(!pngfile) {
 		if(verbosity > 0) {
@@ -56,8 +56,8 @@ int *readPNGFile(char *filename, int *imageWidth, int *imageHeight, int verbosit
 	png_init_io(png, pngfile);
 	png_set_sig_bytes(png, PNG_BYTES_TO_CHECK);
 	png_read_info(png, info);
-	int width = png_get_image_width(png, info);
-	int height = png_get_image_height(png, info);
+	int width = (int)png_get_image_width(png, info);
+	int height = (int)png_get_image_height(png, info);
 	png_byte color_type = png_get_color_type(png, info);
 	png_byte bit_depth = png_get_bit_depth(png, info);
 
@@ -90,7 +90,7 @@ int *readPNGFile(char *filename, int *imageWidth, int *imageHeight, int verbosit
 	png_read_update_info(png, info);
 
 	png_bytep *row_pointers;
-	row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * height);
+	row_pointers = (png_bytep*)malloc((unsigned long)height * sizeof(png_bytep));
 	for(int y = 0; y < height; y++) {
 		row_pointers[y] = (png_byte*)malloc(png_get_rowbytes(png,info));
 	}
@@ -98,7 +98,7 @@ int *readPNGFile(char *filename, int *imageWidth, int *imageHeight, int verbosit
 	png_read_image(png, row_pointers);
 	fclose(pngfile);
 
-	int *imagePixels = (int*)malloc(sizeof(int) * height * width);
+	int *imagePixels = (int*)malloc((unsigned long)height * (unsigned long)width * sizeof(int));
 
 	int n = 0;
 	int rPixel = 0;
@@ -146,7 +146,7 @@ int *readPNGFile(char *filename, int *imageWidth, int *imageHeight, int verbosit
 	return imagePixels;
 }
 
-void write_png_file(int *imageVector, int width, int height, char *filename) {
+static void write_png_file(int *imageVector, int width, int height, char *filename) {
 	FILE *fp = fopen(filename, "wb");
 	if(!fp) abort();
 
@@ -164,7 +164,7 @@ void write_png_file(int *imageVector, int width, int height, char *filename) {
 	png_set_IHDR(
 		png,
 		info,
-		width, height,
+		(png_uint_32)width, (png_uint_32)height,
 		8,
 		PNG_COLOR_TYPE_RGBA,
 		PNG_INTERLACE_NONE,
@@ -174,7 +174,7 @@ void write_png_file(int *imageVector, int width, int height, char *filename) {
 	png_write_info(png, info);
 
 	png_bytep *row_pointers;
-	row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * height);
+	row_pointers = (png_bytep*)malloc((unsigned long)height * sizeof(png_bytep));
 	for(int y = 0; y < height; y++) {
 		row_pointers[y] = (png_byte*)malloc(png_get_rowbytes(png,info));
 	}

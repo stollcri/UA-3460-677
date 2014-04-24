@@ -4,7 +4,7 @@ ifeq ($(OS),Darwin)
 	CC = cc
 	NVCC = cc
 	CFLAGS = -I/usr/local/include/libpng16 -L/usr/local/lib -lpng16
-	NVCFLAGS = -I/usr/local/include/libpng16 -L/usr/local/lib -lpng16
+	NVCFLAGS = -Weverything -I/usr/local/include/libpng16 -L/usr/local/lib -lpng16
 else
 	CC = nvcc
 	NVCC = nvcc

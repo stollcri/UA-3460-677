@@ -12,50 +12,6 @@
 #define TRAINING_SET_SIZE = 78
 #define DEBUG_PRINT_TIME 1
 
-char nearestNeighborCPU(struct OCRkit *ocrKit, double *questionWeights)
-{
-	int klimit = round(ocrKit->klimit / 4);
-	int dimensionality = ocrKit->dimensionality;
-	int characterCount = ocrKit->characterCount;
-	double *characterWeights = ocrKit->characterWeights;
-	char *characters = ocrKit->characters;
-
-	int charWeightIndex = 0;
-	double numerator = 0;
-	double denominatorA = 0;
-	double denominatorB = 0;
-	double totalScore = 0;
-	double maxScore = -999999;
-	char answer = '~';
-
-	for (int i = 0; i < characterCount; ++i) {
-		numerator = 0;
-		denominatorA = 0;
-		denominatorB = 0;
-
-		for (int j = 0; j < klimit; ++j) {
-			// TODO: verify correct index is being used here
-			charWeightIndex = (i * (dimensionality-1)) + j;
-			numerator += questionWeights[j] * characterWeights[charWeightIndex];
-			denominatorA += questionWeights[j] * questionWeights[j];
-			denominatorB += characterWeights[charWeightIndex] * characterWeights[charWeightIndex];
-		}
-
-		if (denominatorA && denominatorB) {
-			totalScore = numerator / (sqrt(denominatorA) * sqrt(denominatorB));
-		} else {
-			totalScore = 0;
-		}
-		// printf("%d %c: %2.16f -- %f => %f\n", i, characters[i], characterWeights[charWeightIndex], totalScore, maxScore);
-
-		if (totalScore > maxScore) {
-			maxScore = totalScore;
-			answer = characters[i];
-		}
-	}
-	return answer;
-}
-
 __global__ void nearestNeighborGPUa(int g_klimit, int g_dimensionality, double *g_charWeights, double *g_qWeights, int *g_scores)
 {
 	extern __shared__ double s_qWeights[];
@@ -94,7 +50,7 @@ __global__ void nearestNeighborGPUa(int g_klimit, int g_dimensionality, double *
 	g_scores[idx] = totalScore;
 }
 
-char launchNearestNeighborA(struct OCRkit *ocrKit, double *questionWeights)
+static char launchNearestNeighborA(struct OCRkit *ocrKit, double *questionWeights)
 {
 	// gather basic information
 	int characterCount = ocrKit->characterCount;
@@ -139,7 +95,7 @@ char launchNearestNeighborA(struct OCRkit *ocrKit, double *questionWeights)
 	CUDA_SAFE_CALL(cudaMemcpy(h_scores, d_scores, scoreMemSize, cudaMemcpyDeviceToHost));
 }
 
-char nearestNeighbor(struct OCRkit *ocrKit, double *questionWeights)
+static char nearestNeighbor(struct OCRkit *ocrKit, double *questionWeights)
 {
 	struct timeval stop, start;
 	char answer = '?';

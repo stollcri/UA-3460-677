@@ -14,6 +14,7 @@ struct imageDocumentChar {
 	int x2;
 	int y2;
 	char value;
+	char pad[7]; // unused memory padding
 	struct imageDocumentChar *nextChar;
 	struct imageDocumentChar *lastChar;
 };
@@ -29,7 +30,7 @@ struct imageDocument {
 };
 
 
-struct imageDocument *newImageDocument()
+static struct imageDocument *newImageDocument()
 {
 	struct imageDocument *newDocument;
 	newDocument = (struct imageDocument*)malloc(sizeof(struct imageDocument));
@@ -39,7 +40,7 @@ struct imageDocument *newImageDocument()
 	return newDocument;
 }
 
-struct imageDocumentLine *newImageDocumentLine()
+static struct imageDocumentLine *newImageDocumentLine()
 {
 	struct imageDocumentLine *newDocumentLine;
 	newDocumentLine = (struct imageDocumentLine*)malloc(sizeof(struct imageDocumentLine));
@@ -51,7 +52,7 @@ struct imageDocumentLine *newImageDocumentLine()
 	return newDocumentLine;
 }
 
-struct imageDocumentChar *newImageDocumentChar(int x1, int y1, int x2, int y2, char value)
+static struct imageDocumentChar *newImageDocumentChar(int x1, int y1, int x2, int y2, char value)
 {
 	struct imageDocumentChar *newDocumentChar;
 	newDocumentChar = (struct imageDocumentChar*)malloc(sizeof(struct imageDocumentChar));
@@ -67,26 +68,26 @@ struct imageDocumentChar *newImageDocumentChar(int x1, int y1, int x2, int y2, c
 	return newDocumentChar;
 }
 
-struct imageDocumentChar *newImageDocumentCharBlank()
-{
-	return newImageDocumentChar(0, 0, 0, 0, ' ');
-}
+// static struct imageDocumentChar *newImageDocumentCharBlank()
+// {
+// 	return newImageDocumentChar(0, 0, 0, 0, ' ');
+// }
 
-void freeImageDocument(struct imageDocument *targetDocument)
-{
-	if (targetDocument) {
-		// TODO: free the memory
-	}
-}
+// static void freeImageDocument(struct imageDocument *targetDocument)
+// {
+// 	if (targetDocument) {
+// 		// TODO: free the memory
+// 	}
+// }
 
-void freeImageDocumentLine(struct imageDocumentLine *targetLine)
+static void freeImageDocumentLine(struct imageDocumentLine *targetLine)
 {
 	if (targetLine) {
 		// TODO: free the memory
 	}
 }
 
-void freeImageDocumentChar(struct imageDocumentChar *targetChar)
+static void freeImageDocumentChar(struct imageDocumentChar *targetChar)
 {
 	if (targetChar) {
 		// TODO: free the memory
@@ -94,12 +95,12 @@ void freeImageDocumentChar(struct imageDocumentChar *targetChar)
 }
 
 
-void addLineToDocument(struct imageDocument *targetDocument, struct imageDocumentLine *sourceLine)
+static void addLineToDocument(struct imageDocument *targetDocument, struct imageDocumentLine *sourceLine)
 {
 	if (targetDocument && sourceLine) {
 		if (targetDocument->lines) {
 			struct imageDocumentLine *currentLine = targetDocument->lines;
-			struct imageDocumentLine *nextLine;
+			struct imageDocumentLine *nextLine = NULL;
 			
 			while (currentLine->nextLine) {
 				nextLine = currentLine->nextLine;
@@ -115,12 +116,12 @@ void addLineToDocument(struct imageDocument *targetDocument, struct imageDocumen
 	}
 }
 
-void addCharToLine(struct imageDocumentLine *targetLine, struct imageDocumentChar *sourceChar)
+static void addCharToLine(struct imageDocumentLine *targetLine, struct imageDocumentChar *sourceChar)
 {
 	if (targetLine && sourceChar) {
 		if (targetLine->characters) {
 			struct imageDocumentChar *currentChar = targetLine->characters;
-			struct imageDocumentChar *nextChar;
+			struct imageDocumentChar *nextChar = NULL;
 
 			while (currentChar->nextChar) {
 				nextChar = currentChar->nextChar;
@@ -136,15 +137,15 @@ void addCharToLine(struct imageDocumentLine *targetLine, struct imageDocumentCha
 	}
 }
 
-void printDocument(struct imageDocument *targetDocument, int preserveNewLine)
+static void printDocument(struct imageDocument *targetDocument, int preserveNewLine)
 {
 	if (targetDocument) {
 		if (targetDocument->lines) {
 			struct imageDocumentLine *currentLine = targetDocument->lines;
-			struct imageDocumentLine *nextLine;
+			struct imageDocumentLine *nextLine = NULL;
 
-			struct imageDocumentChar *currentChar;
-			struct imageDocumentChar *nextChar;
+			struct imageDocumentChar *currentChar = NULL;
+			struct imageDocumentChar *nextChar = NULL;
 			
 			while (currentLine) {
 				currentChar = currentLine->characters;

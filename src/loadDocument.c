@@ -19,7 +19,7 @@
 
 #define DEBUG_SAVE_INDIVIDUAL_CHARACTERS 0
 
-struct imageDocumentLine *findCharacters(int *imageVector, int imageWidth, int rowBegin, int rowEnd, int *spacing)
+static struct imageDocumentLine *findCharacters(int *imageVector, int imageWidth, int rowBegin, int rowEnd, int *spacing)
 {
 	struct imageDocumentLine *currentLine = newImageDocumentLine();
 	struct imageDocumentChar *newchar;
@@ -75,7 +75,7 @@ struct imageDocumentLine *findCharacters(int *imageVector, int imageWidth, int r
 		} else {
 			// update our space width estimation
 			if (pixelCols > 2) {
-				charSpacing = (int)round((charSpacing + (pixelCols / 3)) / 2) + 1;
+				charSpacing = (int)round( ((float)charSpacing + ((float)pixelCols / 3) ) / 2 ) + 1;
 				*spacing = charSpacing;
 			}
 			++spaceCols;
@@ -143,10 +143,10 @@ struct imageDocumentLine *findCharacters(int *imageVector, int imageWidth, int r
 					strcat(fName, buffer);
 					// printf(" %d,%d = %s\n", wdth, high, fName);
 					int k = 0;
-					int *charImageVector = (int*)malloc(wdth * high * sizeof(int));
-					for (int i = finalY1; i < finalY2; ++i) {
-						for (int j = finalX1; j < finalX2; ++j) {
-							currentPixel = (i * imageWidth) + j;
+					int *charImageVector = (int*)malloc((unsigned long)wdth * (unsigned long)high * sizeof(int));
+					for (int m = finalY1; m < finalY2; ++m) {
+						for (int n = finalX1; n < finalX2; ++n) {
+							currentPixel = (m * imageWidth) + n;
 							charImageVector[k] = imageVector[currentPixel];
 							++k;
 						}
@@ -162,7 +162,7 @@ struct imageDocumentLine *findCharacters(int *imageVector, int imageWidth, int r
 	return currentLine;
 }
 
-struct imageDocument *findRows(int *imageVector, int imageWidth, int imageHeight, int imageDepth)
+static struct imageDocument *findRows(int *imageVector, int imageWidth, int imageHeight, int imageDepth)
 {
 	int pixelIverse = 0;
 	int currentPixel = 0;
@@ -241,14 +241,14 @@ struct imageDocument *findRows(int *imageVector, int imageWidth, int imageHeight
 	return currentImageDoc;
 }
 
-int *loadDocument(char *filename, int *imageWidth, int *imageHeight)
+static int *loadDocument(char *filename, int *imageWidth, int *imageHeight)
 {
 	int *imageVector;
 	imageVector = readPNGFile(filename, imageWidth, imageHeight, LOADDOCUMENT_VERBOSE);
 	return imageVector;
 }
 
-struct imageDocument *processDocument(int *imageVector, int imageWidth, int imageHeight)
+static struct imageDocument *processDocument(int *imageVector, int imageWidth, int imageHeight)
 {
 	if (imageVector && imageWidth && imageHeight) {
 		struct imageDocument *imageDoc;

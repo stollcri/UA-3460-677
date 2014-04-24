@@ -16,7 +16,7 @@
 #define DEBUG_SAVE_STANDARDIZED_CHARACTERS 0
 #define DEBUG_PRINT_STANDARDIZED_CHARACTERS 0
 
-int standardizeImageMatrix(int *imageVector, int imageWidth, struct imageDocumentChar *imageDocChar, int **charImage)
+static int standardizeImageMatrix(int *imageVector, int imageWidth, struct imageDocumentChar *imageDocChar, int **charImage)
 {
 	int width = imageDocChar->x2 - imageDocChar->x1;
 	int height = imageDocChar->y2 - imageDocChar->y1;
@@ -59,8 +59,8 @@ int standardizeImageMatrix(int *imageVector, int imageWidth, struct imageDocumen
 		}
 	}
 	// create a working image
-	int *tempImage = (int*)malloc(newWidth * newHeight * sizeof(int));
-	memset(tempImage, 0, (newWidth * newHeight * sizeof(int)));
+	int *tempImage = (int*)malloc((unsigned long)newWidth * (unsigned long)newHeight * sizeof(int));
+	memset(tempImage, 0, ((unsigned long)newWidth * (unsigned long)newHeight * sizeof(int)));
 
 	int k = 0;
 	int l = 0;
@@ -83,8 +83,8 @@ int standardizeImageMatrix(int *imageVector, int imageWidth, struct imageDocumen
 	}
 
 	int targetImageWidth = STANDARD_IMAGE_SIDE;
-	int *resizedImage = (int*)malloc(targetImageWidth * targetImageWidth * sizeof(int));
-	memset(resizedImage, 0, (targetImageWidth * targetImageWidth * sizeof(int)));
+	int *resizedImage = (int*)malloc((unsigned long)targetImageWidth * (unsigned long)targetImageWidth * sizeof(int));
+	memset(resizedImage, 0, ((unsigned long)targetImageWidth * (unsigned long)targetImageWidth * sizeof(int)));
 	sizeSquareImage(tempImage, resizedImage, newWidth, targetImageWidth);
 	
 	if (DEBUG_SAVE_STANDARDIZED_CHARACTERS) {
@@ -111,11 +111,11 @@ int standardizeImageMatrix(int *imageVector, int imageWidth, struct imageDocumen
 	return 1;
 }
 
-double *projectCandidate(int *charImageVector, struct OCRkit *ocrKit)
+static double *projectCandidate(int *charImageVector, struct OCRkit *ocrKit)
 {
-	int klimit = round(ocrKit->klimit / 4);
-	double *tempWeights = (double*)malloc(klimit * sizeof(double));
-	memset(tempWeights, 0, (klimit * sizeof(double)));
+	int klimit = (int)round(ocrKit->klimit / 4);
+	double *tempWeights = (double*)malloc((unsigned long)klimit * sizeof(double));
+	memset(tempWeights, 0, ((unsigned long)klimit * sizeof(double)));
 
 	double *eigenImageSpace = ocrKit->eigenImageSpace;
 	int dimensionality = ocrKit->dimensionality;
@@ -133,7 +133,7 @@ double *projectCandidate(int *charImageVector, struct OCRkit *ocrKit)
 	return tempWeights;
 }
 
-void ocrCharacter(struct OCRkit *ocrKit, struct imageDocumentChar *imageDocChar)
+static void ocrCharacter(struct OCRkit *ocrKit, struct imageDocumentChar *imageDocChar)
 {
 	if (imageDocChar) {
 		//printf("%c", imageDocChar->value);
@@ -153,12 +153,12 @@ void ocrCharacter(struct OCRkit *ocrKit, struct imageDocumentChar *imageDocChar)
 	}
 }
 
-void ocrCharLoop(struct OCRkit *ocrKit, struct imageDocumentLine *imageDocLine)
+static void ocrCharLoop(struct OCRkit *ocrKit, struct imageDocumentLine *imageDocLine)
 {
 	if (imageDocLine) {
 		if (imageDocLine->characters) {
 			struct imageDocumentChar *currentChar = imageDocLine->characters;
-			struct imageDocumentChar *nextChar;
+			struct imageDocumentChar *nextChar = NULL;
 
 			ocrCharacter(ocrKit, currentChar);
 
@@ -174,13 +174,13 @@ void ocrCharLoop(struct OCRkit *ocrKit, struct imageDocumentLine *imageDocLine)
 	}
 }
 
-void ocrLineLoop(struct OCRkit *ocrKit)
+static void ocrLineLoop(struct OCRkit *ocrKit)
 {
 	struct imageDocument *imageDoc = ocrKit->imageDoc;
 	if (imageDoc) {
 		if (imageDoc->lines) {
 			struct imageDocumentLine *currentLine = imageDoc->lines;
-			struct imageDocumentLine *nextLine;
+			struct imageDocumentLine *nextLine = NULL;
 
 			ocrCharLoop(ocrKit, currentLine);
 
@@ -196,7 +196,7 @@ void ocrLineLoop(struct OCRkit *ocrKit)
 	}
 }
 
-void startOcr(struct OCRkit *ocrKit)
+static void startOcr(struct OCRkit *ocrKit)
 {
 	ocrLineLoop(ocrKit);
 }

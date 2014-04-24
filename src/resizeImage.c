@@ -5,27 +5,27 @@
 #ifndef RESIZEIMAGE_C
 #define RESIZEIMAGE_C
 
-void ScaleLineA(int *Target, int *Source, int SrcWidth, int TgtWidth)
-{
-	int NumPixels = TgtWidth;
-	int IntPart = SrcWidth / TgtWidth;
-	int FractPart = SrcWidth % TgtWidth;
-	int E = 0;
+// static void ScaleLineA(int *Target, int *Source, int SrcWidth, int TgtWidth)
+// {
+// 	int NumPixels = TgtWidth;
+// 	int IntPart = SrcWidth / TgtWidth;
+// 	int FractPart = SrcWidth % TgtWidth;
+// 	int E = 0;
 
-	while (NumPixels-- > 0) {
-		*Target++ = *Source;
-		Source += IntPart;
-		E += FractPart;
-		if (E >= TgtWidth) {
-			E -= TgtWidth;
-			Source++;
-		} /* if */
-	} /* while */
-}
+// 	while (NumPixels-- > 0) {
+// 		*Target++ = *Source;
+// 		Source += IntPart;
+// 		E += FractPart;
+// 		if (E >= TgtWidth) {
+// 			E -= TgtWidth;
+// 			Source++;
+// 		} /* if */
+// 	} /* while */
+// }
 
 #define AVERAGE(a, b)   (int)( ((a) + (b)) >> 1 )
 
-void ScaleLine(int *Target, int *Source, int SrcWidth, int TgtWidth)
+static void ScaleLine(int *Target, int *Source, int SrcWidth, int TgtWidth)
 {
 	/* N.B. because of several simplifications of the algorithm,
 	 *      the zoom range is restricted between 0.5 and 2. That
@@ -53,7 +53,7 @@ void ScaleLine(int *Target, int *Source, int SrcWidth, int TgtWidth)
 		*Target = *Source;
 }
 
-void resizeImage(int *Source, int *Target, int SrcWidth, int SrcHeight, int TgtWidth, int TgtHeight)
+static void resizeImage(int *Source, int *Target, int SrcWidth, int SrcHeight, int TgtWidth, int TgtHeight)
 {
 	int NumPixels = TgtHeight;
 	int IntPart = (SrcHeight / TgtHeight) * SrcWidth;
@@ -63,7 +63,7 @@ void resizeImage(int *Source, int *Target, int SrcWidth, int SrcHeight, int TgtW
 
 	while (NumPixels-- > 0) {
 		if (Source == PrevSource) {
-			memcpy(Target, Target-TgtWidth, TgtWidth*sizeof(*Target));
+			memcpy(Target, Target-TgtWidth, (unsigned long)TgtWidth * sizeof(*Target));
 		} else {
 			ScaleLine(Target, Source, SrcWidth, TgtWidth);
 			PrevSource = Source;
@@ -78,7 +78,7 @@ void resizeImage(int *Source, int *Target, int SrcWidth, int SrcHeight, int TgtW
 	} /* while */
 }
 
-void sizeSquareImage(int *source, int *target, int sourceSides, int targetSides)
+static void sizeSquareImage(int *source, int *target, int sourceSides, int targetSides)
 {
 	int diff = targetSides - sourceSides;
 	int sourcePixel = 0;
@@ -100,7 +100,7 @@ void sizeSquareImage(int *source, int *target, int sourceSides, int targetSides)
 		int l = 0;
 		int modSkip = diff;
 		if (modSkip == 1) {
-			modSkip = round(targetSides / 2);
+			modSkip = (int)round(targetSides / 2);
 		}
 		for (int i = 0; i < targetSides; ++i) {
 			l = 0;
