@@ -43,9 +43,9 @@ __global__ void nearestNeighborGPUa(int g_klimit, int g_dimensionality, double *
 
 	if (denominatorA && denominatorB) {
 		totalScore = numerator / (sqrt(denominatorA) * sqrt(denominatorB));
-	} else {
-		totalScore = 0;
 	}
+
+	__syncthreads(); 
 
 	// save cosine similarity score
 	g_scores[idx] = totalScore;
@@ -79,8 +79,10 @@ static char launchNearestNeighborA(struct OCRkit *ocrKit, double *questionWeight
 	// allocate memory for scores
 	int scoreMemSize = characterCount * sizeof(double);
 	double *h_scores = (double*)malloc(scoreMemSize);
+	memset(h_scores, 0, characterCount * sizeof(double));
 	double *d_scores = NULL;
 	CUDA_SAFE_CALL(cudaMalloc((void**)&d_scores, scoreMemSize));
+	CUDA_SAFE_CALL(cudaMemcpy(d_scores, h_scores, scoreMemSize, cudaMemcpyHostToDevice));
 
 	// set up parallel dimensions
 	int threadsPerBlock = characterCount;
@@ -89,8 +91,9 @@ static char launchNearestNeighborA(struct OCRkit *ocrKit, double *questionWeight
 	dim3 dimBlock(threadsPerBlock);
 	int sharedMemSize = klimit * sizeof(double);
 
-	// run ther kernel
+	// run the kernel
 	nearestNeighborGPUa<<< dimGrid,dimBlock,sharedMemSize >>>(klimit, dimensionality, d_charWeights, d_qWeights, d_scores);
+	cudaThreadSynchronize();
 
 	// get the scores
 	CUDA_SAFE_CALL(cudaMemcpy(h_scores, d_scores, scoreMemSize, cudaMemcpyDeviceToHost));
@@ -113,11 +116,11 @@ static char nearestNeighbor(struct OCRkit *ocrKit, double *questionWeights)
 
 	gettimeofday(&start, NULL);
 	//answer = nearestNeighborCPU(ocrKit, questionWeights);
-	launchNearestNeighborA(ocrKit, questionWeights);
+	answer = launchNearestNeighborA(ocrKit, questionWeights);
 	gettimeofday(&stop, NULL);
 
 	if (DEBUG_PRINT_TIME) {
-		printf("Time: %u us \n", (unsigned int)(stop.tv_usec - start.tv_usec));
+		printf("Time: %u us (%c)\n", (unsigned int)(stop.tv_usec - start.tv_usec), answer);
 	}
 
 	return answer;
