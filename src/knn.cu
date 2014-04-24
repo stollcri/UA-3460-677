@@ -74,7 +74,7 @@ static char launchNearestNeighborA(struct OCRkit *ocrKit, double *questionWeight
 	int qWeightMemSize = dimensionality * sizeof(double);
 	double *d_qWeights = NULL;
 	CUDA_SAFE_CALL(cudaMalloc((void**)&d_qWeights, qWeightMemSize));
-	CUDA_SAFE_CALL(cudaMemcpy(d_qWeights, questionWeights, cWeightMemSize, cudaMemcpyHostToDevice));
+	CUDA_SAFE_CALL(cudaMemcpy(d_qWeights, questionWeights, qWeightMemSize, cudaMemcpyHostToDevice));
 
 	// allocate memory for scores
 	int scoreMemSize = characterCount * sizeof(double);
