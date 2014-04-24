@@ -44,7 +44,7 @@ __global__ void nearestNeighborGPUa(int g_klimit, int g_dimensionality, double *
 	// calulate the cosine similarity
 	for (int j = 0; j < g_klimit; ++j) {
 		charWeightIndex = charWeightIndexPart + j;
-		printf("idx:%d j:%d charWeightIndexPart:%d, charWeightIndex:%d\n", idx, j, charWeightIndexPart, charWeightIndex);
+		
 		numerator += g_qWeights[j] * g_charWeights[charWeightIndex];
 		denominatorA += g_qWeights[j] * g_qWeights[j];
 		denominatorB += g_charWeights[charWeightIndex] * g_charWeights[charWeightIndex];
@@ -81,7 +81,7 @@ static char launchNearestNeighborA(struct OCRkit *ocrKit, double *questionWeight
 	int qWeightMemSize = dimensionality * sizeof(double);
 	double *d_qWeights = NULL;
 	CUDA_SAFE_CALL(cudaMalloc((void**)&d_qWeights, qWeightMemSize));
-	CUDA_SAFE_CALL(cudaMemcpy(d_qWeights, questionWeights, qWeightMemSize, cudaMemcpyHostToDevice));
+	//CUDA_SAFE_CALL(cudaMemcpy(d_qWeights, questionWeights, qWeightMemSize, cudaMemcpyHostToDevice));
 
 	// allocate memory for scores
 	int scoreMemSize = characterCount * sizeof(double);
@@ -127,7 +127,6 @@ static char nearestNeighbor(struct OCRkit *ocrKit, double *questionWeights)
 	struct timeval stop, start;
 	char answer = '?';
 
-	printf(" > \n");
 	gettimeofday(&start, NULL);
 	//answer = nearestNeighborCPU(ocrKit, questionWeights);
 	answer = launchNearestNeighborA(ocrKit, questionWeights);
