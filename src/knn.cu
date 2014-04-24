@@ -27,7 +27,7 @@ __global__ void nearestNeighborGPUa(int g_klimit, int g_dimensionality, double *
 	extern __shared__ double s_qWeights[];
 	int idx = (blockIdx.x * blockDim.x) + threadIdx.x;
 
-	load shared memory
+	// load shared memory
 	if (idx < g_dimensionality) {
 		s_qWeights[idx] = g_qWeights[idx];
 	}
