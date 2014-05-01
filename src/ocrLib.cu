@@ -140,7 +140,7 @@ static void ocrCharacter(struct OCRkit *ocrKit, struct imageDocumentChar *imageD
 		int *charImage;
 		int standardizeOk = standardizeImageMatrix(ocrKit->imageVector, ocrKit->imageWidth, imageDocChar, &charImage);
 		if (standardizeOk) {
-			ocrKit->weights = projectCandidate(charImage, ocrKit);
+			imageDocChar->weights = projectCandidate(charImage, ocrKit);
 			free(charImage);
 
 			// char answer = nearestNeighbor(ocrKit, weights);
