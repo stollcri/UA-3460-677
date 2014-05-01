@@ -10,7 +10,7 @@
 #include "ocrKit.c"
 #include <sys/time.h>
 
-#define DEBUG_PRINT_TIME 1
+#define DEBUG_PRINT_TIME 0
 
 static char nearestNeighborCPU(struct OCRkit *ocrKit, double *questionWeights)
 {

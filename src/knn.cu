@@ -24,13 +24,13 @@ static void checkCUDAError(const char *msg)
 
 __global__ void nearestNeighborGPUa(int g_klimit, int g_dimensionality, double *g_charWeights, double *g_qWeights, double *g_scores)
 {
-	extern __shared__ double s_qWeights[];
+	// extern __shared__ double s_qWeights[];
 	int idx = (blockIdx.x * blockDim.x) + threadIdx.x;
 
-	// load shared memory
-	if (idx < g_dimensionality) {
-		s_qWeights[idx] = g_qWeights[idx];
-	}
+	// // load shared memory
+	// if (idx < g_dimensionality) {
+	// 	s_qWeights[idx] = g_qWeights[idx];
+	// }
 	__syncthreads();
 
 	// set some rgisters
@@ -64,6 +64,7 @@ static char launchNearestNeighborA(struct OCRkit *ocrKit, double *questionWeight
 	int characterCount = ocrKit->characterCount;
 	int klimit = (ocrKit->klimit / 4);
 	int dimensionality = ocrKit->dimensionality;
+	int questionWeightsCount = ocrKit->imageDoc->totalWeightCount;
 	// We are using a static declaration to get more shared memory
 	// A pitfall is if the eigen data is updated to include more characters
 	// This program must be changed and recompiled
@@ -78,10 +79,10 @@ static char launchNearestNeighborA(struct OCRkit *ocrKit, double *questionWeight
 	CUDA_SAFE_CALL(cudaMemcpy(d_charWeights, ocrKit->characterWeights, cWeightMemSize, cudaMemcpyHostToDevice));
 
 	// allocate memory for candidate weights
-	int qWeightMemSize = dimensionality * sizeof(double);
+	int qWeightMemSize = questionWeightsCount * sizeof(double);
 	double *d_qWeights = NULL;
 	CUDA_SAFE_CALL(cudaMalloc((void**)&d_qWeights, qWeightMemSize));
-	//CUDA_SAFE_CALL(cudaMemcpy(d_qWeights, questionWeights, qWeightMemSize, cudaMemcpyHostToDevice));
+	CUDA_SAFE_CALL(cudaMemcpy(d_qWeights, questionWeights, qWeightMemSize, cudaMemcpyHostToDevice));
 
 	// allocate memory for scores
 	int scoreMemSize = characterCount * sizeof(double);
@@ -122,14 +123,14 @@ static char launchNearestNeighborA(struct OCRkit *ocrKit, double *questionWeight
 	return answer;
 }
 
-static char nearestNeighbor(struct OCRkit *ocrKit, double *questionWeights)
+static char nearestNeighbor(struct OCRkit *ocrKit, double *candidateWeights)
 {
 	struct timeval stop, start;
 	char answer = '?';
 
 	gettimeofday(&start, NULL);
 	//answer = nearestNeighborCPU(ocrKit, questionWeights);
-	answer = launchNearestNeighborA(ocrKit, questionWeights);
+	answer = launchNearestNeighborA(ocrKit, candidateWeights);
 	gettimeofday(&stop, NULL);
 
 	if (DEBUG_PRINT_TIME) {

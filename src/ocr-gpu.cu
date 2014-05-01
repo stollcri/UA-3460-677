@@ -9,7 +9,7 @@
 #include "loadDocument.c"
 #include "ocrKit.c"
 #include "knn.cu"
-#include "ocrLib.c"
+#include "ocrLib.cu"
 
 static void runOcr(char *targetfile, int peserveNewline)
 {

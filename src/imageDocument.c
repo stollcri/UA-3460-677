@@ -14,7 +14,8 @@ struct imageDocumentChar {
 	int x2;
 	int y2;
 	char value;
-	char pad[7]; // unused memory padding
+	//char pad[7]; // unused memory padding
+	double *weights;
 	struct imageDocumentChar *nextChar;
 	struct imageDocumentChar *lastChar;
 };
@@ -26,6 +27,7 @@ struct imageDocumentLine {
 };
 
 struct imageDocument {
+	int totalWeightCount;
 	struct imageDocumentLine *lines;
 };
 
@@ -35,6 +37,7 @@ static struct imageDocument *newImageDocument()
 	struct imageDocument *newDocument;
 	newDocument = (struct imageDocument*)malloc(sizeof(struct imageDocument));
 
+	newDocument->totalWeightCount = 0;
 	newDocument->lines = NULL;
 
 	return newDocument;
@@ -62,6 +65,7 @@ static struct imageDocumentChar *newImageDocumentChar(int x1, int y1, int x2, in
 	newDocumentChar->x2 = x2;
 	newDocumentChar->y2 = y2;
 	newDocumentChar->value = value;
+	newDocumentChar->weights = NULL;
 	newDocumentChar->nextChar = NULL;
 	newDocumentChar->lastChar = NULL;
 
@@ -170,6 +174,69 @@ static void printDocument(struct imageDocument *targetDocument, int preserveNewL
 			freeImageDocumentLine(currentLine);
 		}
 	}
+}
+
+
+double *vectorizeWeights(struct imageDocument *targetDocument)
+{
+	if (targetDocument) {
+		if (targetDocument->lines) {
+			struct imageDocumentLine *currentLine = targetDocument->lines;
+			struct imageDocumentLine *nextLine = NULL;
+
+			struct imageDocumentChar *currentChar = NULL;
+			struct imageDocumentChar *nextChar = NULL;
+			
+			int numberOfWeights = 0;
+			while (currentLine) {
+				currentChar = currentLine->characters;
+				while (currentChar->nextChar) {
+					++numberOfWeights;
+					nextChar = currentChar->nextChar;
+					currentChar = nextChar;
+				}
+				nextLine = currentLine->nextLine;
+				currentLine = nextLine;
+			}
+
+			double *tempWeights = (double*)malloc((unsigned long)numberOfWeights * sizeof(double));
+			memset(tempWeights, 0, ((unsigned long)numberOfWeights * sizeof(double)));
+
+			double *allWeights = (double*)malloc((unsigned long)numberOfWeights * klimit * sizeof(double));
+			memset(allWeights, 0, ((unsigned long)numberOfWeights * klimit * sizeof(double)));
+
+			int currentWeight = 0;
+			while (currentLine) {
+				currentChar = currentLine->characters;
+				while (currentChar->nextChar) {
+					if (currentChar->weights) {
+						tempWeights = currentChar->weights;
+						for (int i = 0; i < klimit; ++i) {
+							allWeights[currentWeight] = tempWeights[i];
+							++currentWeight;
+						}
+					} else {
+						currentWeight += klimit;
+					}
+					
+					nextChar = currentChar->nextChar;
+					currentChar = nextChar;
+				}
+				nextLine = currentLine->nextLine;
+				currentLine = nextLine;
+			}
+
+			freeImageDocumentChar(nextChar);
+			freeImageDocumentChar(currentChar);
+			freeImageDocumentLine(nextLine);
+			freeImageDocumentLine(currentLine);
+
+			targetDocument->totalWeightCount = numberOfWeights * klimit;
+			return allWeights;
+		}
+		return NULL;
+	}
+	return NULL;
 }
 
 #endif
