@@ -36,6 +36,8 @@ __global__ void nearestNeighborGPUa(int g_klimit, int g_dimensionality, double *
 	// set some rgisters
 	int charWeightIndex = 0;
 	int charWeightIndexPart = (idx * (g_dimensionality-1));
+	int qWeightIndex = 0;
+	int qWeightIndexPart = (idx * (g_klimit-1));
 	double numerator = 0;
 	double denominatorA = 0;
 	double denominatorB = 0;
@@ -44,9 +46,10 @@ __global__ void nearestNeighborGPUa(int g_klimit, int g_dimensionality, double *
 	// calulate the cosine similarity
 	for (int j = 0; j < g_klimit; ++j) {
 		charWeightIndex = charWeightIndexPart + j;
+		qWeightIndex = qWeightIndexPart + j;
 		
-		numerator += g_qWeights[j] * g_charWeights[charWeightIndex];
-		denominatorA += g_qWeights[j] * g_qWeights[j];
+		numerator += g_qWeights[qWeightIndex] * g_charWeights[charWeightIndex];
+		denominatorA += g_qWeights[qWeightIndex] * g_qWeights[qWeightIndex];
 		denominatorB += g_charWeights[charWeightIndex] * g_charWeights[charWeightIndex];
 	}
 
