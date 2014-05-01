@@ -92,13 +92,13 @@ static char launchNearestNeighborA(struct OCRkit *ocrKit, double *questionWeight
 
 	// set up parallel dimensions
 	int threadsPerBlock = characterCount;
-	int blocksPerGrid = 1;
+	int blocksPerGrid = questionWeightsCount / klimit;
 	dim3 dimGrid(blocksPerGrid);
 	dim3 dimBlock(threadsPerBlock);
-	int sharedMemSize = dimensionality * sizeof(double);
+	// int sharedMemSize = dimensionality * sizeof(double);
 
 	// run the kernel
-	nearestNeighborGPUa<<< dimGrid,dimBlock,sharedMemSize >>>(klimit, dimensionality, d_charWeights, d_qWeights, d_scores);
+	nearestNeighborGPUa<<< dimGrid,dimBlock >>>(klimit, dimensionality, d_charWeights, d_qWeights, d_scores);
 	cudaThreadSynchronize();
 	checkCUDAError("kernel");
 
@@ -123,21 +123,17 @@ static char launchNearestNeighborA(struct OCRkit *ocrKit, double *questionWeight
 	return answer;
 }
 
-static char nearestNeighbor(struct OCRkit *ocrKit, double *candidateWeights)
+void nearestNeighbor(struct OCRkit *ocrKit, double *candidateWeights)
 {
 	struct timeval stop, start;
-	char answer = '?';
 
 	gettimeofday(&start, NULL);
-	//answer = nearestNeighborCPU(ocrKit, questionWeights);
-	answer = launchNearestNeighborA(ocrKit, candidateWeights);
+	launchNearestNeighborA(ocrKit, candidateWeights);
 	gettimeofday(&stop, NULL);
 
 	if (DEBUG_PRINT_TIME) {
 		printf("Time: %u us (%c)\n", (unsigned int)(stop.tv_usec - start.tv_usec), answer);
 	}
-
-	return answer;
 }
 
 #endif
