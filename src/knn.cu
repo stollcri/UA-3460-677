@@ -86,12 +86,14 @@ static char launchNearestNeighborA(struct OCRkit *ocrKit, double *questionWeight
 	double *d_qWeights = NULL;
 	CUDA_SAFE_CALL(cudaMalloc((void**)&d_qWeights, qWeightMemSize));
 	CUDA_SAFE_CALL(cudaMemcpy(d_qWeights, questionWeights, qWeightMemSize, cudaMemcpyHostToDevice));
+	checkCUDAError("memcpy");
 
 	// allocate memory for scores
 	int scoreMemSize = characterCount * sizeof(double);
 	double *h_scores = (double*)malloc(scoreMemSize);
 	double *d_scores = NULL;
 	CUDA_SAFE_CALL(cudaMalloc((void**)&d_scores, scoreMemSize));
+	checkCUDAError("memcpy");
 
 	// set up parallel dimensions
 	int threadsPerBlock = characterCount;
