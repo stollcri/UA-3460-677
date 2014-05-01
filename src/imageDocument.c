@@ -177,7 +177,7 @@ static void printDocument(struct imageDocument *targetDocument, int preserveNewL
 }
 
 
-double *vectorizeWeights(struct imageDocument *targetDocument)
+double *vectorizeWeights(struct imageDocument *targetDocument, int klimit)
 {
 	if (targetDocument) {
 		if (targetDocument->lines) {

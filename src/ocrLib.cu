@@ -199,7 +199,7 @@ static void ocrLineLoop(struct OCRkit *ocrKit)
 static void startOcr(struct OCRkit *ocrKit)
 {
 	ocrLineLoop(ocrKit);
-	nearestNeighbor(ocrKit, vectorizeWeights(ocrKit->imageDoc));
+	nearestNeighbor(ocrKit, vectorizeWeights(ocrKit->imageDoc, ocrKit->klimit));
 }
 
 #endif
