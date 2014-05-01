@@ -132,7 +132,7 @@ void nearestNeighbor(struct OCRkit *ocrKit, double *candidateWeights)
 	gettimeofday(&stop, NULL);
 
 	if (DEBUG_PRINT_TIME) {
-		printf("Time: %u us (%c)\n", (unsigned int)(stop.tv_usec - start.tv_usec), answer);
+		printf("Time: %u us (%c)\n", (unsigned int)(stop.tv_usec - start.tv_usec), '?');
 	}
 }
 
